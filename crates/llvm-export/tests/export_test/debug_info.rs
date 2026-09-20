@@ -689,7 +689,8 @@ fn full_debug_metadata_emits_dbg_declare_for_tagged_allocas() {
     std::fs::write(&ll_path, &ir).expect("write pointer-debug temp .ll");
     let output = std::process::Command::new(llvm_as)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
+        .stdout(std::process::Stdio::null())
         .arg(&ll_path)
         .output()
         .expect("run llvm-as for pointer debug metadata");
@@ -1576,7 +1577,8 @@ fn full_debug_globals_preserve_qualified_identity_visibility_and_relocations() {
     std::fs::write(&ll_path, &full).expect("write temp .ll");
     let output = std::process::Command::new(llvm_as)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
+        .stdout(std::process::Stdio::null())
         .arg(&ll_path)
         .output()
         .expect("run llvm-as");
@@ -2249,7 +2251,8 @@ fn full_debug_metadata_emits_diarglist_for_multi_value_locations() {
     std::fs::write(&ll_path, &ir).expect("write temp .ll");
     let output = std::process::Command::new(llvm_as)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
+        .stdout(std::process::Stdio::null())
         .arg(&ll_path)
         .output()
         .expect("run llvm-as");
@@ -2697,7 +2700,8 @@ fn full_debug_metadata_emits_scalarized_fragment_dbg_declares() {
     std::fs::write(&ll_path, &ir).expect("write fragment temp .ll");
     let output = std::process::Command::new(llvm_as)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
+        .stdout(std::process::Stdio::null())
         .arg(&ll_path)
         .output()
         .expect("run llvm-as for fragments");
@@ -3201,7 +3205,8 @@ fn run_llvm_as(tool: &str, ir: &str, tag: &str) -> std::process::Output {
     std::fs::write(&ll_path, ir).expect("write temp .ll");
     let output = std::process::Command::new(tool)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
+        .stdout(std::process::Stdio::null())
         .arg(&ll_path)
         .output()
         .expect("run llvm-as");
