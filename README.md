@@ -6,10 +6,10 @@
   <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml"><img alt="windows" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml/badge.svg?branch=main"></a>
   <br>
   <br>
-  <img src="assets/windows-banner-dark.png" alt="cuda-oxide: pure Rust CUDA (SIMT) kernels with Windows support" width="720">
+  <img src="assets/windows-banner-dark-cropped.png" alt="cuda-oxide: pure Rust CUDA (SIMT) kernels with Windows support" width="720">
 </p>
 
-> Unofficial Windows-support fork of [NVlabs/cuda-oxide](https://github.com/NVlabs/cuda-oxide).
+> Windows-support fork of [NVlabs/cuda-oxide](https://github.com/NVlabs/cuda-oxide), maintained by [ansidium](https://github.com/ansidium).
 
 | Platform | Integration | Documentation |
 |----------|-------------|---------------|
