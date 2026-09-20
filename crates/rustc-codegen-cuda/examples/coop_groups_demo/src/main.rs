@@ -228,8 +228,8 @@ pub fn test_typed_warp16_ballot(mut out: DisjointSlice<u32>) {
     }
 }
 
-/// Check tile-relative and sparse-group shuffle source handling. The stored
-/// value remains each 16-lane tile's lane-0 broadcast.
+/// Check tile-relative shuffles plus sparse-group ballot packing and shuffle
+/// source handling. The stored value remains each 16-lane tile's lane-0 broadcast.
 #[kernel]
 pub fn test_typed_warp16_shfl(mut out: DisjointSlice<u32>) {
     let gid = thread::index_1d();
@@ -257,7 +257,8 @@ pub fn test_typed_warp16_shfl(mut out: DisjointSlice<u32>) {
             });
     let coalesced_ok = if lane & 1 == 0 {
         let group = coalesced_threads();
-        (group.shfl(lane, group.size()) == lane)
+        (group.ballot((lane & 2) != 0) == 0xAAAA)
+            & (group.shfl(lane, group.size()) == lane)
             & (group.shfl_xor(lane, 1) == lane)
             & (group.shfl_down(lane, 1) == lane)
             & (group.shfl_up(lane, 1) == lane)
@@ -269,8 +270,18 @@ pub fn test_typed_warp16_shfl(mut out: DisjointSlice<u32>) {
     } else {
         true
     };
+    // Include the top physical lane and gaps of different sizes, so the
+    // device regression cannot pass by merely shifting an even-lane ballot.
+    let irregular_ok = if (0x8010_0089u32 & (1u32 << lane)) != 0 {
+        let group = coalesced_threads();
+        (group.ballot(lane == 3 || lane == 20 || lane == 31) == 0x1A)
+            & (group.ballot(true) == 0x1F)
+            & (group.ballot(false) == 0)
+    } else {
+        true
+    };
     if let Some(slot) = out.get_mut(gid) {
-        *slot = if tile_ok & coalesced_ok {
+        *slot = if tile_ok & coalesced_ok & irregular_ok {
             broadcast
         } else {
             u32::MAX

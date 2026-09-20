@@ -39,10 +39,14 @@ use pliron::basic_block::BasicBlock;
 use pliron::builtin::op_interfaces::SymbolOpInterface;
 use pliron::context::{Context, Ptr};
 use pliron::identifier::{Identifier, Legaliser};
-use pliron::input_err_noloc;
 use pliron::location::Located;
 use pliron::op::Op;
 use pliron::operation::Operation;
+use pliron::{input_err_noloc, input_error_noloc};
+use reserved_oxide_symbols::{
+    MIR_GRID_CONSTANT_ALIGN_ATTR_PREFIX, MIR_GRID_CONSTANT_POINTEE_ATTR_PREFIX,
+};
+
 // Re-export rustc_public types for convenience
 use rustc_hash::FxHashMap;
 use rustc_public::mir;
@@ -148,6 +152,71 @@ fn detect_cluster_config(
         });
     }
     None
+}
+
+/// Source parameter indices declared with `#[grid_constant]`.
+///
+/// `#[kernel]` replaces each parameter attribute with one
+/// `__grid_constant_config::<INDEX>()` marker. Indices remain source-level
+/// here; mir-lower maps them through slice scalarization to LLVM parameter
+/// positions exactly once.
+fn detect_grid_constant_params(
+    body: &mir::Body,
+    reachable: &std::collections::BTreeSet<usize>,
+    instance: &mono::Instance,
+    is_kernel: bool,
+) -> Result<Vec<usize>, String> {
+    use rustc_public::ty::TyConstKind;
+
+    let mut indices = std::collections::BTreeSet::new();
+    for &block_idx in reachable {
+        let block = &body.blocks[block_idx];
+        let mir::TerminatorKind::Call { func, .. } = &block.terminator.kind else {
+            continue;
+        };
+        let mir::Operand::Constant(constant) = func else {
+            continue;
+        };
+        let ConstantKind::ZeroSized = constant.const_.kind() else {
+            continue;
+        };
+        let TyKind::RigidTy(RigidTy::FnDef(def_id, args)) = constant.const_.ty().kind() else {
+            continue;
+        };
+        let definition_name = def_id.name();
+        if def_id.krate().name.as_str() != "cuda_device"
+            || (definition_name != "__grid_constant_config"
+                && !definition_name.ends_with("::__grid_constant_config"))
+        {
+            continue;
+        }
+        facts::validate_grid_constant_marker_owner(instance, block_idx, is_kernel)?;
+        if args.0.len() != 1 {
+            return Err(format!(
+                "cuda_device grid-constant marker has {} generic arguments; expected exactly 1",
+                args.0.len()
+            ));
+        }
+        let rustc_public::ty::GenericArgKind::Const(index) = &args.0[0] else {
+            return Err("cuda_device grid-constant parameter index is not a constant".to_string());
+        };
+        let raw = match index.kind() {
+            TyConstKind::Value(_, allocation) => allocation.read_uint().map_err(|error| {
+                format!("could not read grid-constant parameter index: {error:?}")
+            })?,
+            _ => u128::from(index.eval_target_usize().map_err(|error| {
+                format!("could not evaluate grid-constant parameter index: {error:?}")
+            })?),
+        };
+        let index = usize::try_from(raw)
+            .map_err(|_| format!("grid-constant parameter index {raw} does not fit usize"))?;
+        if !indices.insert(index) {
+            return Err(format!(
+                "kernel contains duplicate grid-constant marker for source parameter {index}"
+            ));
+        }
+    }
+    Ok(indices.into_iter().collect())
 }
 
 /// Scans MIR for `__launch_bounds_config::<MAX, MIN>()` marker and extracts launch bounds.
@@ -1940,6 +2009,52 @@ pub fn translate_body(
         }
     };
 
+    // Validate the source contract before translating argument types, so DSTs
+    // and interior-mutability failures report the grid-constant declaration
+    // rather than an incidental failure deeper in type lowering.
+    let grid_constant_params =
+        detect_grid_constant_params(body, &reachable, instance, is_kernel)
+            .map_err(|error| input_error_noloc!(TranslationErr::invalid_op(error)))?;
+    let mut grid_constant_layouts = Vec::with_capacity(grid_constant_params.len());
+    for source_index in grid_constant_params {
+        if source_index >= num_args {
+            return input_err_noloc!(TranslationErr::invalid_op(format!(
+                "grid-constant source parameter index {source_index} is out of range for {num_args} parameters"
+            )));
+        }
+        let local = mir::Local::from(source_index + 1);
+        let parameter_ty = body.locals()[local].ty;
+        let TyKind::RigidTy(RigidTy::Ref(_, pointee, mutability)) = parameter_ty.kind() else {
+            return input_err_noloc!(TranslationErr::invalid_op(format!(
+                "grid-constant source parameter {source_index} is not a reference"
+            )));
+        };
+        if mutability != mir::Mutability::Not {
+            return input_err_noloc!(TranslationErr::invalid_op(format!(
+                "grid-constant source parameter {source_index} is mutable"
+            )));
+        }
+        facts::validate_grid_constant_parameter(instance, source_index, pointee)
+            .map_err(|error| input_error_noloc!(TranslationErr::invalid_op(error)))?;
+        let layout = pointee.layout().map_err(|error| {
+            input_error_noloc!(TranslationErr::unsupported(format!(
+                "could not query grid-constant parameter {source_index} pointee layout: {error:?}"
+            )))
+        })?;
+        let shape = layout.shape();
+        if !shape.is_sized() {
+            return input_err_noloc!(TranslationErr::invalid_op(format!(
+                "grid-constant source parameter {source_index} requires a sized pointee"
+            )));
+        }
+        if shape.size.bytes() == 0 {
+            return input_err_noloc!(TranslationErr::invalid_op(format!(
+                "grid-constant source parameter {source_index} has a zero-sized pointee"
+            )));
+        }
+        grid_constant_layouts.push((source_index, pointee, shape.abi_align));
+    }
+
     for arg_idx in 0..num_args {
         // MIR local index for arguments: local 1, 2, 3, ... (0 is return value)
         let local = mir::Local::from(arg_idx + 1);
@@ -2039,7 +2154,6 @@ pub fn translate_body(
         }
     }
 
-    // Check if the function has the #[cuda_oxide::kernel] attribute (passed via is_kernel flag)
     if is_kernel {
         // Add "gpu_kernel" attribute to the mir.func operation.
         // This will be used by the lowering pass to set the "gpu_kernel" attribute on the llvm.func.
@@ -2051,6 +2165,37 @@ pub fn translate_body(
             .deref_mut(ctx)
             .attributes
             .set(key, kernel_attr);
+
+        for (source_index, pointee, alignment) in grid_constant_layouts {
+            let pointee_ty = types::translate_type(ctx, &pointee)?;
+            let type_key: Identifier =
+                format!("{MIR_GRID_CONSTANT_POINTEE_ATTR_PREFIX}{source_index}")
+                    .as_str()
+                    .try_into()
+                    .expect("grid-constant pointee attribute name is valid");
+            let align_key: Identifier =
+                format!("{MIR_GRID_CONSTANT_ALIGN_ATTR_PREFIX}{source_index}")
+                    .as_str()
+                    .try_into()
+                    .expect("grid-constant alignment attribute name is valid");
+            let align_ty = pliron::builtin::types::IntegerType::get(
+                ctx,
+                64,
+                pliron::builtin::types::Signedness::Unsigned,
+            );
+            let align = pliron::utils::apint::APInt::from_u64(
+                alignment,
+                std::num::NonZero::new(64).expect("64 is non-zero"),
+            );
+            let mut operation = mir_func_op.get_operation().deref_mut(ctx);
+            operation
+                .attributes
+                .set(type_key, TypeAttr::new(pointee_ty));
+            operation.attributes.set(
+                align_key,
+                pliron::builtin::attributes::IntegerAttr::new(align_ty, align),
+            );
+        }
 
         // Detect compile-time cluster configuration from #[cluster(x,y,z)] attribute
         if let Some(cluster_dims) = detect_cluster_config(body, &reachable) {

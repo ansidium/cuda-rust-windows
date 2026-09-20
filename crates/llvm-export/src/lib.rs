@@ -358,21 +358,6 @@ pub mod ops {
     /// Versioned, length-prefixed pointer-relocation metadata for an initialized
     /// Rust static.
     const GLOBAL_INITIALIZER_RELOCATIONS_KEY: &str = "cuda_oxide_global_initializer_relocations";
-    /// Marks a `GlobalOp` whose storage no code ever writes, so it is exported
-    /// as LLVM `constant` rather than `global`.
-    ///
-    /// Set only for storage this compiler itself materialises from an evaluated
-    /// Rust constant: the initializer is the whole value, no device code holds a
-    /// mutable path to it, and no host setter is generated for its name. A Rust
-    /// `static` / `static mut` never carries this, and neither does anything
-    /// reachable through `#[constant]` or `#[device_global]`, because the host
-    /// writes those by symbol.
-    ///
-    /// This is deliberately a property of the *storage*, not of a pointer's
-    /// `is_mutable` bit: a shared reference to a mutable static is an immutable
-    /// pointer to mutable storage, and #413 records that `MirPtrType::is_mutable`
-    /// must not be read as a promise about the pointee.
-    const GLOBAL_IMMUTABLE_KEY: &str = "cuda_oxide_global_immutable";
     /// Rust path of the shared-memory `static` a generated `__shared_mem_N`
     /// global came from.
     ///
@@ -1353,8 +1338,6 @@ pub mod ops {
     /// static. The exporter resolves this to the one real `DISubprogram` used
     /// by that definition; it never creates a scope-only duplicate.
     const DEBUG_GLOBAL_OWNER_FUNCTION_KEY: &str = "cuda_oxide_debug_global_owner_function";
-    /// Op-attribute key for ordinary volatile `load` / `store` operations.
-    const OP_VOLATILE_KEY: &str = "cuda_oxide_op_volatile";
     /// Op-attribute key for the alignment an address computation guarantees.
     /// Lowering-internal: never exported.
     const ADDRESS_ALIGNMENT_KEY: &str = "cuda_oxide_address_alignment";
@@ -2479,23 +2462,6 @@ pub mod ops {
         }
     }
 
-    /// Stamp volatile memory semantics onto an ordinary LLVM load/store op.
-    pub fn set_op_volatile(ctx: &mut Context, op: Ptr<Operation>, volatile: bool) {
-        let key = Identifier::try_new(OP_VOLATILE_KEY.to_string()).expect("valid identifier");
-        op.deref_mut(ctx)
-            .attributes
-            .set(key, BoolAttr::new(volatile));
-    }
-
-    /// Read the volatile flag stamped on an ordinary LLVM load/store op.
-    pub fn op_volatile(ctx: &Context, op: Ptr<Operation>) -> bool {
-        let key = Identifier::try_new(OP_VOLATILE_KEY.to_string()).expect("valid identifier");
-        op.deref(ctx)
-            .attributes
-            .get::<BoolAttr>(&key)
-            .is_some_and(|attr| bool::from(attr.clone()))
-    }
-
     /// Alignment helpers re-homed from the pre-migration local `GlobalOp`.
     /// Upstream `GlobalOp` carries type/linkage/addrspace but no alignment, so
     /// we keep the alignment in the op's generic attribute dictionary. Address
@@ -2522,16 +2488,6 @@ pub mod ops {
         fn set_initializer_relocations(&self, ctx: &mut Context, encoded: &str);
         /// Read serialized initializer relocation metadata.
         fn initializer_relocations(&self, ctx: &Context) -> Option<String>;
-        /// Mark this global's storage as never written, so it exports as
-        /// `constant` rather than `global`.
-        ///
-        /// Only storage the compiler materialises from an evaluated constant may
-        /// claim this: the initializer is the whole value, the symbol name is
-        /// generated so no host setter can reach it, and nothing is handed a
-        /// mutable path to it. A Rust `static` never carries it.
-        fn mark_immutable(&self, ctx: &mut Context);
-        /// Whether this global's storage was marked never-written.
-        fn is_immutable(&self, ctx: &Context) -> bool;
         /// Attach the Rust path of the shared-memory `static` this global came from.
         ///
         /// Descriptive only: the exporter renders it as a comment above the
@@ -2625,25 +2581,6 @@ pub mod ops {
                 .attributes
                 .get::<StringAttr>(&key)
                 .map(|attr| String::from((*attr).clone()))
-        }
-
-        fn mark_immutable(&self, ctx: &mut Context) {
-            let key =
-                Identifier::try_new(GLOBAL_IMMUTABLE_KEY.to_string()).expect("valid identifier");
-            self.get_operation()
-                .deref_mut(ctx)
-                .attributes
-                .set(key, pliron::builtin::attributes::UnitAttr);
-        }
-
-        fn is_immutable(&self, ctx: &Context) -> bool {
-            let key =
-                Identifier::try_new(GLOBAL_IMMUTABLE_KEY.to_string()).expect("valid identifier");
-            self.get_operation()
-                .deref(ctx)
-                .attributes
-                .get::<pliron::builtin::attributes::UnitAttr>(&key)
-                .is_some()
         }
 
         fn set_shared_source_name(&self, ctx: &mut Context, source_name: &str) {

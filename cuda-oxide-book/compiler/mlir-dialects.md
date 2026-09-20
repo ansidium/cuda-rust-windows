@@ -117,8 +117,15 @@ simplified for readability -- the actual printed form includes more metadata.
 %checked = mir.checked_add %a, %b : i32
 %sum     = mir.extract_field %checked, 0 : mir.tuple<i32, i1>
 %overflowed = mir.extract_field %checked, 1 : mir.tuple<i32, i1>
-mir.assert %overflowed == false, "attempt to add with overflow" -> bb1
+%ok = mir.not %overflowed : i1
+mir.assert %ok
+mir.goto bb1
 ```
+
+`mir.assert` continues within its block when the condition is true and traps
+otherwise. It stays separate from the branch so merging blocks cannot erase
+the check. LLVM lowering splits the block at the assertion and adds an
+explicit branch to either the following operations or a trap block.
 
 **Struct construction and field access** (Rust: `point.x`):
 

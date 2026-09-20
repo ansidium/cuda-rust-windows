@@ -3611,6 +3611,27 @@ fn detect_run_target_arch_skips_when_env_target_set() {
     assert_eq!(detect_run_target_arch_with_env(None, false, true), None);
 }
 
+#[test]
+fn build_arch_warning_is_emitted_when_arch_is_unconfigured_and_local_gpu_exists() {
+    let warning = build_arch_warning(false, Some("sm_121a"))
+        .expect("an unconfigured build with a local GPU should warn");
+
+    assert!(warning.contains("backend default"));
+    assert!(warning.contains("first GPU reported by `nvidia-smi`"));
+    assert!(warning.contains("sm_121a"));
+    assert!(warning.contains("--arch <sm_XX>"));
+}
+
+#[test]
+fn build_arch_warning_is_suppressed_when_arch_is_configured() {
+    assert_eq!(build_arch_warning(true, Some("sm_121a")), None);
+}
+
+#[test]
+fn build_arch_warning_is_suppressed_when_no_local_gpu_is_detected() {
+    assert_eq!(build_arch_warning(false, None), None);
+}
+
 fn write_list_example(
     examples_dir: &Path,
     name: &str,
@@ -4506,6 +4527,46 @@ fn nvvm_ir_requested_env_disable_overrides_enabled_project_configuration() {
             Ok(false)
         );
     }
+}
+
+#[test]
+fn debug_policy_token_reports_what_the_shared_parser_decides() {
+    // `scripts/smoketest.sh` asks for this token to decide whether its
+    // optimized code-shape gates apply. The spellings below are the ones a
+    // second implementation gets wrong: `2` is an alias, the comparison is
+    // case-insensitive, and the value is trimmed with `str::trim`, which
+    // takes the Unicode White_Space set rather than the POSIX class.
+    for full in [
+        "full",
+        "2",
+        "FULL",
+        "Full",
+        "  full  ",
+        "\u{a0}full",
+        "\tfull\n",
+    ] {
+        assert_eq!(debug_policy_token(Some(full)), "full", "{full:?}");
+    }
+    for lines in [
+        "1",
+        "line",
+        "lines",
+        "line-tables",
+        "line-tables-only",
+        " Line ",
+    ] {
+        assert_eq!(debug_policy_token(Some(lines)), "line-tables", "{lines:?}");
+    }
+    for none in ["0", "off", "none", "OFF"] {
+        assert_eq!(debug_policy_token(Some(none)), "none", "{none:?}");
+    }
+    // An unrecognized value is distinct from an unset one: the first is
+    // someone writing a value that means nothing, the second leaves the
+    // caller's own default in place. Neither is full debug.
+    for other in ["", "   ", "fullx", "full full", "3", "yes", "debug"] {
+        assert_eq!(debug_policy_token(Some(other)), "unrecognized", "{other:?}");
+    }
+    assert_eq!(debug_policy_token(None), "unset");
 }
 
 #[test]

@@ -6,7 +6,7 @@
 //! Kernel and parameter models for `#[cuda_module]`: marshalling
 //! classification and host-side type mapping.
 
-use crate::common::{cuda_module_async_lifetime, internal_ident};
+use crate::common::{cuda_module_async_lifetime, grid_constant_pointee, internal_ident};
 use crate::cuda_module::contract::CudaModuleLaunchContract;
 use crate::cuda_module::launchers::{cuda_kernel_marker_name, generic_arguments};
 use proc_macro2::TokenStream as TokenStream2;
@@ -25,7 +25,9 @@ pub(crate) struct CudaModuleKernel {
     /// complete chain because they live outside those child modules.
     pub(crate) effective_cfg_attrs: Vec<syn::Attribute>,
     pub(super) method_attrs: Vec<syn::Attribute>,
-    pub(super) unsafety: Option<Token![unsafe]>,
+    /// Host launch safety is independent of the source function's Rust safety:
+    /// copying a grid parameter does not prove its nested values device-valid.
+    pub(super) launch_unsafety: Option<Token![unsafe]>,
     pub(crate) fn_name: Ident,
     pub(super) generics: syn::Generics,
     pub(super) params: Vec<CudaModuleParam>,
@@ -40,6 +42,7 @@ pub(crate) struct CudaModuleParam {
     pub(crate) sync_host_ty: TokenStream2,
     pub(crate) async_host_ty: TokenStream2,
     pub(crate) marshal: CudaModuleParamMarshal,
+    pub(crate) grid_constant: bool,
     pub(crate) mutable_slice: bool,
     pub(crate) disjoint_slice_ty: Option<Type>,
     pub(crate) disjoint_slice_elem: Option<TokenStream2>,
@@ -135,7 +138,9 @@ pub(crate) fn cuda_module_param_from_typed(
         ));
     };
     let name = pat_ident.ident.clone();
-    let (sync_host_ty, async_host_ty, marshal) = cuda_module_host_type(&pat_type.ty)?;
+    let grid_constant_pointee = grid_constant_pointee(pat_type)?;
+    let (sync_host_ty, async_host_ty, marshal) =
+        cuda_module_host_type(&pat_type.ty, grid_constant_pointee.as_ref())?;
     let mutable_slice = cuda_module_slice_elem(&pat_type.ty).is_some_and(|(_, mutable)| mutable);
     let disjoint_slice_elem = cuda_module_disjoint_slice_elem(&pat_type.ty);
     let disjoint_slice_ty = disjoint_slice_elem
@@ -150,6 +155,7 @@ pub(crate) fn cuda_module_param_from_typed(
         sync_host_ty,
         async_host_ty,
         marshal,
+        grid_constant: grid_constant_pointee.is_some(),
         mutable_slice,
         disjoint_slice_ty,
         disjoint_slice_elem,
@@ -161,8 +167,16 @@ pub(crate) fn cuda_module_param_from_typed(
 
 fn cuda_module_host_type(
     ty: &Type,
+    grid_constant_pointee: Option<&Type>,
 ) -> syn::Result<(TokenStream2, TokenStream2, CudaModuleParamMarshal)> {
     let async_lifetime = cuda_module_async_lifetime();
+    if let Some(pointee) = grid_constant_pointee {
+        return Ok((
+            quote! { #pointee },
+            quote! { #pointee },
+            CudaModuleParamMarshal::Scalar,
+        ));
+    }
     if let Some((elem_ty, mutable)) = cuda_module_slice_elem(ty) {
         let sync_host_ty = if mutable {
             quote! { &mut ::cuda_core::DeviceBuffer<#elem_ty> }

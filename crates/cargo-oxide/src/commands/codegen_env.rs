@@ -225,6 +225,38 @@ fn strip_wrapper_owned_codegen_cfgs(flags: &mut Vec<String>) {
     *flags = retained;
 }
 
+/// Report the debug policy `CUDA_OXIDE_DEBUG` selects in this environment,
+/// as one lowercase token on stdout.
+///
+/// Tooling that has to know whether a build will be a full-debug build --
+/// `scripts/smoketest.sh` decides that way whether its optimized code-shape
+/// gates apply at all -- would otherwise restate `parse_env_override`'s
+/// alias, case and whitespace rules in another language. A second
+/// implementation of a policy is a second answer waiting to disagree with the
+/// first, and this one is easy to get wrong: `2` is full debug, so is `FULL`,
+/// and so is a value padded with a non-breaking space.
+pub fn print_debug_policy() {
+    println!(
+        "{}",
+        debug_policy_token(std::env::var("CUDA_OXIDE_DEBUG").ok().as_deref())
+    );
+}
+
+/// `None` means the variable is unset, which is not the same as a value the
+/// parser does not recognize: the first leaves the caller's own default in
+/// place, the second is a value someone wrote expecting it to mean something.
+pub(super) fn debug_policy_token(value: Option<&str>) -> &'static str {
+    let Some(value) = value else {
+        return "unset";
+    };
+    match cuda_artifact_finalizer::DebugPolicy::parse_env_override(value) {
+        Some(cuda_artifact_finalizer::DebugPolicy::None) => "none",
+        Some(cuda_artifact_finalizer::DebugPolicy::LineTables) => "line-tables",
+        Some(cuda_artifact_finalizer::DebugPolicy::Full) => "full",
+        None => "unrecognized",
+    }
+}
+
 fn command_requests_full_device_debug_with_env(
     cmd: &Command,
     inherited_debug: Option<&str>,
@@ -616,6 +648,10 @@ pub(super) fn detect_run_target_arch_with_env(
         return None;
     }
 
+    detect_local_device_arch()
+}
+
+pub(super) fn detect_local_device_arch() -> Option<String> {
     query_device_compute_cap().map(format_sm_arch)
 }
 
@@ -712,9 +748,10 @@ pub(super) fn parse_gpu_name_cap_and_driver(stdout: &str) -> Option<(String, (u3
 /// every chip that reports cc ≥ 9.0 *is* the `a`-variant chip in NVIDIA's
 /// lineup (there is no consumer Hopper, no non-`a` sm_100, and so on).
 ///
-/// This helper is only used by [`detect_run_target_arch`] in `cargo oxide
-/// run`, where the local GPU is known exactly and no cross-compile is in
-/// flight. Emitting the `a` form there:
+/// For GPU auto-detection, this formats the compute capability of the first GPU
+/// reported by `nvidia-smi`. `cargo oxide run` uses the result as an advisory
+/// target hint, while `cargo oxide build` may display it for diagnostics without
+/// changing the build target. Emitting the `a` form for a detected GPU:
 ///
 /// - **No false negatives:** kernels that need `tcgen05` / WGMMA compile and
 ///   load on that GPU (was: silent fallback to `sm_100` / `sm_90` and a
