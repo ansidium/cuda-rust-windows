@@ -6,7 +6,7 @@
   <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml"><img alt="windows" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml/badge.svg?branch=main"></a>
   <br>
   <br>
-  <img src="assets/windows-fork-logo.png" alt="cuda-oxide Windows-support fork logo" width="920">
+  <img src="assets/windows-fork-logo.png" alt="cuda-oxide: pure Rust CUDA (SIMT) kernels with Windows support" width="720">
 </p>
 
 > **Fork notice:** This repository is an unofficial Windows-support fork of
@@ -121,7 +121,7 @@ launch.sync()?;
 // or: .await?;
 ```
 
-See the `async_mlp` example for the full async setup. The host runtime (`cuda-core`, `cuda-async`) is shared with cutile-rs and published from [NVlabs/cutile-rs](https://github.com/NVlabs/cutile-rs); the cuda-oxide SIMT surface lives under its `simt` modules.
+See the `async_mlp` example for the full async setup. The host runtime (`cuda-core`, `cuda-async`) is shared with [NVlabs/cutile-rs](https://github.com/NVlabs/cutile-rs); the cuda-oxide SIMT surface lives under its `simt` modules. This fork uses the Windows-compatible runtime from [ansidium/cutile-rs](https://github.com/ansidium/cutile-rs), pinned in [Cargo.toml](Cargo.toml).
 
 ```bash
 # Build and run an example
@@ -139,7 +139,7 @@ cargo oxide clean
 # Run CUDA correctness checks
 cargo oxide sanitize vecadd --tool memcheck
 
-# Debug with cuda-gdb
+# Debug with cuda-gdb (Linux only)
 cargo oxide debug vecadd --tui
 
 # Run Cargo tests through the cuda-oxide backend
@@ -156,12 +156,16 @@ cargo oxide update
 
 ## Setup
 
+For native Windows, follow the [Windows setup guide](cuda-oxide-book/getting-started/windows.md)
+for MSVC, CUDA, libclang, and PowerShell environment commands. The Linux shell
+and package-manager commands below are not Windows installation instructions.
+
 ### Requirements
 
 - **cargo-oxide** — cargo subcommand that drives the build pipeline (`cargo oxide run`, `build`, `sanitize`, `debug`, etc.)
 - **Latest stable Rust** with `rust-src`, `rustc-dev`, and `llvm-tools` components (selected by `rust-toolchain.toml`)
 - **CUDA Toolkit** (13.0+, including the cuRAND headers; `libcurand-dev` on Ubuntu). The shared `cuda-bindings` crate loads `libcuda` at run time and needs a CUDA 13.x driver (R580+)
-- **Clang + libclang dev headers** (`clang-21` / `libclang-common-21-dev`) — needed by `bindgen` when building the host `cuda-bindings` crate
+- **Clang + libclang dev headers** (`clang-21` / `libclang-common-21-dev` on Ubuntu) — needed by `bindgen` when building the host `cuda-bindings` crate
 - **Linux** (tested on Ubuntu 24.04) or **Windows x86_64 MSVC**
 
 ### Install
@@ -184,7 +188,7 @@ cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-wind
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend.
 
-#### Nix (alternative)
+#### Nix (Linux alternative)
 
 If you have Nix with flakes enabled, `nix develop` in the repo gives you a reproducible shell with CUDA 13, LLVM 22, Clang, and Rust — no manual apt installs. The shellHook auto-discovers host NVIDIA drivers on NixOS and non-NixOS systems.
 
@@ -279,7 +283,7 @@ compiles a Rust kernel to PTX, launches it on the GPU, and prints
 
 ## Examples
 
-**190+ examples** in `crates/rustc-codegen-cuda/examples/`. Highlights:
+Examples live in [`crates/rustc-codegen-cuda/examples/`](crates/rustc-codegen-cuda/examples/). Highlights:
 
 | Example              | Description                                                              |
 |----------------------|--------------------------------------------------------------------------|

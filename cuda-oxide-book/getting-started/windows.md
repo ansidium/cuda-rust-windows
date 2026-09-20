@@ -17,7 +17,8 @@ The supported Rust target is `x86_64-pc-windows-msvc`.
 
 - Windows 10 22H2 or Windows 11.
 - NVIDIA GPU and a driver compatible with the installed CUDA Toolkit.
-- CUDA Toolkit 12.x or 13.x.
+- CUDA Toolkit 13.0+ and a CUDA 13.x-compatible driver (R580+), as required by
+  the shared host runtime.
 - Visual Studio 2022 Build Tools with the MSVC x64 toolchain and Windows SDK.
 - Latest stable Rust selected by `rust-toolchain.toml`.
 - Rust components: `rust-src`, `rustc-dev`, `rust-analyzer`, `rustfmt`,
