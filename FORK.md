@@ -2,10 +2,9 @@
 
 ## Purpose
 
-This fork carries experimental native Windows support for cuda-oxide while
-keeping Linux behavior upstream-compatible. Windows support is scoped to
-developer enablement, CI canaries, smoke scripts, and narrow compatibility
-helpers needed for `x86_64-pc-windows-msvc`.
+This fork adds native Windows support for `x86_64-pc-windows-msvc` while
+keeping Linux behavior upstream-compatible. Windows changes cover build
+tools, library discovery, CI, smoke tests, and platform compatibility fixes.
 
 The shared host runtime is pinned to `ansidium/cutile-rs` for MSVC enum ABI
 fixes. The isolated backend uses the in-tree COFF artifact writer; host

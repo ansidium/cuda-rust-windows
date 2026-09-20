@@ -1,17 +1,14 @@
-# Windows Setup (Experimental)
+# Windows Setup
 
-This page documents the native Windows path for the cuda-oxide Windows-support
-fork. The fork still tracks NVlabs/cuda-oxide and keeps Linux behavior
-upstream-compatible. Windows support is experimental and targets MSVC only.
-The supported Rust target is `x86_64-pc-windows-msvc`.
+The Windows fork targets `x86_64-pc-windows-msvc` and tracks NVlabs/cuda-oxide.
 
 ## Support Matrix
 
-| Platform | Status | Notes |
-|----------|--------|-------|
-| Windows 10 22H2 | Experimental | Use `x86_64-pc-windows-msvc`. |
-| Windows 11 | Experimental | Use `x86_64-pc-windows-msvc`. |
-| Linux | Upstream-compatible | Follow the Linux setup in the README and book. |
+| Platform | Target |
+|----------|--------|
+| Windows 10 22H2 / Windows 11 | `x86_64-pc-windows-msvc` |
+
+For Linux, see [Installation](installation.md).
 
 ## Requirements
 

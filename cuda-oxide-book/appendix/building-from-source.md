@@ -14,15 +14,12 @@ from a fresh checkout. If you just want to run an example, the
 | **CUDA Toolkit** | 13.0+ (with cuRAND headers)   | Driver API, `nvcc`, PTX assembler; `curand.h` for bindgen   |
 | **Clang**        | 21+ (`clang-21` pkg)          | `bindgen` in host `cuda-bindings` needs clang's headers     |
 | **Linux**        | Tested on Ubuntu 24.04        | Upstream-compatible path                                    |
-| **Windows**      | Windows 10 22H2/11, MSVC      | Experimental fork path, `x86_64-pc-windows-msvc` only       |
+| **Windows**      | Windows 10 22H2/11, MSVC      | `x86_64-pc-windows-msvc` only                              |
 | **GPU**          | sm_80, sm_90, sm_100a         | Hardware target                                             |
 
 ```{note}
-The native Windows path is experimental in this fork and does not change the
-Linux build instructions below. It targets `x86_64-pc-windows-msvc`. See the
-[Windows setup doc](../getting-started/windows.md) for the Windows setup
-checklist and [FORK.md](https://github.com/ansidium/cuda-oxide-windows/blob/main/FORK.md)
-for fork policy.
+The commands below are for Linux. For Windows, see
+[Windows setup](../getting-started/windows.md).
 ```
 
 ## Clone the repository

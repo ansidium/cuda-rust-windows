@@ -21,10 +21,7 @@ then reports `CUDA_ERROR_NOT_INITIALIZED` and the attempted library paths.
 The driver must support the CUDA major version used to build the binary.
 
 :::{note}
-Upstream cuda-oxide is Linux-first. This Windows-support fork keeps Linux
-upstream-compatible and adds experimental Windows 10 22H2/11 support for
-`x86_64-pc-windows-msvc`. See the [Windows setup doc](windows.md) for the
-native Windows checklist.
+For Windows 10 22H2/11 (`x86_64-pc-windows-msvc`), see [Windows setup](windows.md).
 Windows runtime discovery and hosted CI are community-maintained by
 [ansidium](https://github.com/ansidium). Hosted runners check compilation and
 library loading; kernel execution is validated manually on Windows GPU hardware.
