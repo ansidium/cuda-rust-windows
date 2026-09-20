@@ -127,7 +127,7 @@ pub(crate) const PINNED_SOURCE_REPOSITORY: &str =
 // This source commit may intentionally precede the cargo-oxide CLI commit:
 // embedding a commit's own SHA is impossible. It must nevertheless contain
 // the complete backend and library migration for the selected compiler.
-pub(crate) const PINNED_SOURCE_REVISION: &str = "5092e864a8f3b2512cf2e28d7522a5e59acb203b";
+pub(crate) const PINNED_SOURCE_REVISION: &str = "7c7b31f4b5d30b05d08e70f513b369dcf9a4425d";
 
 struct BackendCacheLock {
     file: std::fs::File,
