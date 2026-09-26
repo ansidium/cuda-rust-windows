@@ -83,7 +83,7 @@ CUDA_OXIDE_VERBOSE=1 cargo oxide run atomics
 
 ### Floating-point add lowering
 
-With the pinned `nightly-2026-08-28` toolchain's LLVM 23 NVPTX defaults,
+With upstream's LLVM 23 NVPTX defaults,
 `atomic_f32_fetch_add_test` uses a compare-and-swap (CAS) loop for global memory.
 Generic-address-space `f32` adds also use a loop; shared `f32` and `f64` adds
 still use native instructions on supported targets. For example:
@@ -99,6 +99,9 @@ subnormal inputs and results to zero; the loop preserves them under the default
 floating-point mode. Switching instructions therefore changes numerical
 behavior, not just performance. See [#1234](https://github.com/NVlabs/cuda-oxide/issues/1234)
 for the investigation.
+
+This fork uses stable Rust, which may bundle a different LLVM version. Check
+`rustc -Vv` and the generated PTX before assuming the same lowering.
 
 ### Phase 3: Remaining types, scopes, and coverage
 
