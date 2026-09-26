@@ -179,7 +179,7 @@ To use the published repository version from another project, install it from
 Git instead:
 
 ```bash
-cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 3aa2cf77eee2511778176fa7d59fad6a0c0a0cf9 cargo-oxide
+cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 7ba067a776a287c1ebc7946a9358d09f6d8fcc36 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend.
