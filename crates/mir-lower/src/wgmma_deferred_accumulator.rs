@@ -539,7 +539,9 @@ fn match_pipelined_counted_loop(
     let Some(trip_count) = recurrences.trip_count else {
         return Ok(None);
     };
-    if trip_count == 0 || primary_iv >= header_args.len() {
+    // An exit test `counter + const <op> bound` is not proven free of
+    // wraparound here, so its trip count is not trusted.
+    if trip_count == 0 || primary_iv >= header_args.len() || recurrences.iv_offset != 0 {
         return Ok(None);
     }
 
@@ -803,7 +805,9 @@ fn match_counted_loop(
     let Some(trip_count) = recurrences.trip_count else {
         return Ok(None);
     };
-    if trip_count == 0 || primary_iv >= header_args.len() {
+    // An exit test `counter + const <op> bound` is not proven free of
+    // wraparound here, so its trip count is not trusted.
+    if trip_count == 0 || primary_iv >= header_args.len() || recurrences.iv_offset != 0 {
         return Ok(None);
     }
 

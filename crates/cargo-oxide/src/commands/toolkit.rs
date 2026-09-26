@@ -279,7 +279,7 @@ pub(super) fn find_cuda_toolkit_executable_with_env(
     });
     let host_target = backend::active_host_target();
     let pathext = std::env::var_os("PATHEXT");
-    let configured = PathBuf::from(toolkit).join("bin").join(name);
+    let configured = toolkit.join("bin").join(name);
     if let Some(found) = find_executable_path(&configured, pathext.as_deref(), &host_target) {
         return Some(found);
     }

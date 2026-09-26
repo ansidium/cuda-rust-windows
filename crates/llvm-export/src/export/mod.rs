@@ -41,6 +41,7 @@ mod debug;
 mod externs;
 mod function;
 mod literals;
+mod llvm_attrs;
 mod metadata;
 mod module;
 mod names;

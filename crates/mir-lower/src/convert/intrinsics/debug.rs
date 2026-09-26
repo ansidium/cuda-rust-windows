@@ -76,12 +76,24 @@ pub(crate) fn convert_assertfail(
     let declaration =
         helpers::ensure_intrinsic_declared(ctx, parent_block, "__assertfail", func_ty)
             .map_err(|error| pliron::input_error_noloc!("{error}"))?;
-    llvm::set_op_noreturn(ctx, declaration);
+    let declaration_op = Operation::get_op::<llvm::FuncOp>(declaration, ctx)
+        .ok_or_else(|| pliron::input_error_noloc!("__assertfail declaration is not llvm.func"))?;
+    let mut declaration_attrs = declaration_op
+        .get_attr_llvm_func_attrs(ctx)
+        .map(|attrs| (*attrs).clone())
+        .unwrap_or_default();
+    declaration_attrs.set("noreturn", llvm::LlvmAttrValue::Unit);
+    declaration_op.set_attr_llvm_func_attrs(ctx, declaration_attrs);
 
     let sym_name: pliron::identifier::Identifier = "__assertfail".try_into().unwrap();
     let callee = CallOpCallable::Direct(sym_name);
     let call_op = llvm::CallOp::new(ctx, callee, func_ty, operands);
-    llvm::set_op_noreturn(ctx, call_op.get_operation());
+    let mut call_attrs = call_op
+        .get_attr_llvm_call_attrs(ctx)
+        .map(|attrs| (*attrs).clone())
+        .unwrap_or_default();
+    call_attrs.set("noreturn", llvm::LlvmAttrValue::Unit);
+    call_op.set_attr_llvm_call_attrs(ctx, call_attrs);
 
     for dead_op in trailing_ops.into_iter().rev() {
         rewriter.erase_operation(ctx, dead_op);

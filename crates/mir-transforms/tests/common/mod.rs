@@ -16,8 +16,10 @@
 use core::num::NonZero;
 
 use dialect_mir::ops::{
-    MirAddOp, MirCondBranchOp, MirConstantOp, MirFuncOp, MirGotoOp, MirLtOp, MirNotOp, MirReturnOp,
+    MirAddOp, MirCondBranchOp, MirConstantOp, MirFuncOp, MirGeOp, MirGotoOp, MirGtOp, MirLeOp,
+    MirLtOp, MirNotOp, MirReturnOp, MirSubOp,
 };
+use mir_transforms::analyses::induction::CmpPred;
 use pliron::basic_block::BasicBlock;
 use pliron::builtin::attributes::{IntegerAttr, TypeAttr};
 use pliron::builtin::op_interfaces::{
@@ -49,6 +51,16 @@ pub fn i1(ctx: &mut Context) -> TypedHandle<IntegerType> {
 /// An unsigned 32-bit type (the IV type our kernels use).
 pub fn u32t(ctx: &mut Context) -> TypedHandle<IntegerType> {
     IntegerType::get(ctx, 32, Signedness::Unsigned)
+}
+
+/// A signed 32-bit type.
+pub fn i32t(ctx: &mut Context) -> TypedHandle<IntegerType> {
+    IntegerType::get(ctx, 32, Signedness::Signed)
+}
+
+/// A signed 128-bit type, for constants at the edge of the analysis range.
+pub fn i128t(ctx: &mut Context) -> TypedHandle<IntegerType> {
+    IntegerType::get(ctx, 128, Signedness::Signed)
 }
 
 /// Create `fn foo(inputs...) -> outputs...` inside a module and return
@@ -97,6 +109,28 @@ pub fn iconst(
 ) -> Value {
     let width = ty.deref(ctx).width() as usize;
     let apint = APInt::from_i64(val, NonZero::new(width).unwrap());
+    let op = Operation::new(
+        ctx,
+        MirConstantOp::get_concrete_op_info(),
+        vec![ty.into()],
+        vec![],
+        vec![],
+        0,
+    );
+    MirConstantOp::new(op).set_attr_value(ctx, IntegerAttr::new(ty, apint));
+    op.insert_at_back(b, ctx);
+    op.deref(ctx).get_result(0)
+}
+
+/// Append an integer constant given as an `i128`, for types wider than 64 bits.
+pub fn iconst_i128(
+    ctx: &mut Context,
+    b: Ptr<BasicBlock>,
+    ty: TypedHandle<IntegerType>,
+    val: i128,
+) -> Value {
+    let width = ty.deref(ctx).width() as usize;
+    let apint = APInt::from_i128(val, NonZero::new(width).unwrap());
     let op = Operation::new(
         ctx,
         MirConstantOp::get_concrete_op_info(),
@@ -286,6 +320,180 @@ pub fn counted_loop_from_step(ctx: &mut Context, start: i64, n: i64, step: i64) 
 
     // exit: return
     ret(ctx, exit);
+
+    CountedLoop {
+        module,
+        region,
+        preheader,
+        header,
+        latch,
+        exit,
+    }
+}
+
+/// Where an offset loop's limit `n` comes from.
+#[derive(Debug, Clone, Copy)]
+pub enum OffsetBound {
+    /// A compile-time constant.
+    Const(i128),
+    /// The function's only argument, so the limit is known only at runtime.
+    Param,
+    /// The carried accumulator plus this constant, so both sides of the exit
+    /// test are computed from header arguments.
+    AccPlus(i128),
+}
+
+/// Build `while i + off <pred> n { acc += i; i += step }` in the shape mem2reg
+/// leaves it. A negative `off` is written `i - |off|`:
+///
+/// ```text
+///   preheader(n?):    acc0=0; i0=start;          goto header(acc0, i0)
+///   header(acc, i):   v = i + off; t = not(v <pred> n); cond_br t [exit(acc), latch]
+///   latch:            acc1=acc+i; i1=i+step;     goto header(acc1, i1)
+///   exit(result):     return result
+/// ```
+///
+/// All values have type `ty`. With [`OffsetBound::Param`] the function takes
+/// `n` as its only argument.
+pub fn offset_counted_loop(
+    ctx: &mut Context,
+    ty: TypedHandle<IntegerType>,
+    start: i128,
+    step: i128,
+    off: i128,
+    pred: CmpPred,
+    bound: OffsetBound,
+) -> CountedLoop {
+    offset_loop(ctx, ty, start, step, off, pred, bound, false)
+}
+
+/// The same loop with the counter expression on the right of the exit test:
+/// `while n <pred> i + off`. `pred` is the operator as written, so
+/// `n >= i + off` passes [`CmpPred::Ge`].
+pub fn offset_counted_loop_iv_on_right(
+    ctx: &mut Context,
+    ty: TypedHandle<IntegerType>,
+    start: i128,
+    step: i128,
+    off: i128,
+    pred: CmpPred,
+    bound: OffsetBound,
+) -> CountedLoop {
+    offset_loop(ctx, ty, start, step, off, pred, bound, true)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn offset_loop(
+    ctx: &mut Context,
+    ty: TypedHandle<IntegerType>,
+    start: i128,
+    step: i128,
+    off: i128,
+    pred: CmpPred,
+    bound: OffsetBound,
+    iv_on_right: bool,
+) -> CountedLoop {
+    let i1 = i1(ctx);
+    let inputs = match bound {
+        OffsetBound::Param => vec![ty.into()],
+        OffsetBound::Const(_) | OffsetBound::AccPlus(_) => vec![],
+    };
+    let (module, region) = func(ctx, inputs.clone(), vec![ty.into()]);
+
+    let preheader = block(ctx, region, inputs);
+    let header = block(ctx, region, vec![ty.into(), ty.into()]); // (acc, i)
+    let latch = block(ctx, region, vec![]);
+    let exit = block(ctx, region, vec![ty.into()]);
+
+    let acc0 = iconst_i128(ctx, preheader, ty, 0);
+    let i0 = iconst_i128(ctx, preheader, ty, start);
+    goto(ctx, preheader, header, vec![acc0, i0]);
+
+    let acc = header.deref(ctx).get_argument(0);
+    let i = header.deref(ctx).get_argument(1);
+    let tested = if off < 0 {
+        let c = iconst_i128(ctx, header, ty, -off);
+        op2!(
+            ctx,
+            header,
+            MirSubOp::get_concrete_op_info(),
+            ty.into(),
+            i,
+            c
+        )
+    } else {
+        let c = iconst_i128(ctx, header, ty, off);
+        op2!(
+            ctx,
+            header,
+            MirAddOp::get_concrete_op_info(),
+            ty.into(),
+            i,
+            c
+        )
+    };
+    let n = match bound {
+        OffsetBound::Const(n) => iconst_i128(ctx, header, ty, n),
+        OffsetBound::Param => preheader.deref(ctx).get_argument(0),
+        OffsetBound::AccPlus(c) => {
+            let c = iconst_i128(ctx, header, ty, c);
+            op2!(
+                ctx,
+                header,
+                MirAddOp::get_concrete_op_info(),
+                ty.into(),
+                acc,
+                c
+            )
+        }
+    };
+    let (lhs, rhs) = if iv_on_right {
+        (n, tested)
+    } else {
+        (tested, n)
+    };
+    let info = match pred {
+        CmpPred::Lt => MirLtOp::get_concrete_op_info(),
+        CmpPred::Le => MirLeOp::get_concrete_op_info(),
+        CmpPred::Gt => MirGtOp::get_concrete_op_info(),
+        CmpPred::Ge => MirGeOp::get_concrete_op_info(),
+    };
+    let keep_going = op2!(ctx, header, info, i1.into(), lhs, rhs);
+    let done = {
+        let op = Operation::new(
+            ctx,
+            MirNotOp::get_concrete_op_info(),
+            vec![i1.into()],
+            vec![keep_going],
+            vec![],
+            0,
+        );
+        op.insert_at_back(header, ctx);
+        op.deref(ctx).get_result(0)
+    };
+    cond_br_args(ctx, header, done, exit, vec![acc], latch, vec![]);
+
+    let acc1 = op2!(
+        ctx,
+        latch,
+        MirAddOp::get_concrete_op_info(),
+        ty.into(),
+        acc,
+        i
+    );
+    let step = iconst_i128(ctx, latch, ty, step);
+    let inext = op2!(
+        ctx,
+        latch,
+        MirAddOp::get_concrete_op_info(),
+        ty.into(),
+        i,
+        step
+    );
+    goto(ctx, latch, header, vec![acc1, inext]);
+
+    let result = exit.deref(ctx).get_argument(0);
+    ret_values(ctx, exit, vec![result]);
 
     CountedLoop {
         module,

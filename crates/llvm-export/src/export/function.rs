@@ -709,7 +709,7 @@ impl<'a> ModuleExportState<'a> {
         // Check for kernel attribute
         let kernel_key: pliron::identifier::Identifier = "gpu_kernel".try_into().unwrap();
         let attrs = &func.get_operation().deref(self.ctx).attributes;
-        let is_noreturn = crate::ops::op_noreturn(self.ctx, func.get_operation());
+        let llvm_func_attrs = func.get_attr_llvm_func_attrs(self.ctx);
         let is_kernel = attrs
             .get::<pliron::builtin::attributes::StringAttr>(&kernel_key)
             .is_some();
@@ -778,7 +778,7 @@ impl<'a> ModuleExportState<'a> {
         // Reference validity is transported as a typed LLVM-dialect fact.
         // The exporter does not infer Rust semantics: it only checks that a
         // fact is attached to an in-range pointer parameter of a kernel entry
-        // before spelling the corresponding LLVM attributes.
+        // before emitting the corresponding LLVM attributes.
         let mut reference_param_validities = vec![None; func_ty.arg_types().len()];
         for (index, validity) in
             ops::kernel_reference_param_validity_entries(self.ctx, func.get_operation())?
@@ -990,9 +990,8 @@ impl<'a> ModuleExportState<'a> {
                 }
             }
             write!(output, ")").unwrap();
-
-            if is_noreturn {
-                write!(output, " noreturn").unwrap();
+            if let Some(attrs) = llvm_func_attrs.as_deref() {
+                self.export_llvm_attributes(attrs, output)?;
             }
 
             // Check if this is a known convergent intrinsic
@@ -1101,6 +1100,11 @@ impl<'a> ModuleExportState<'a> {
                 }
                 next_value_id += 1;
             }
+            write!(output, ")").unwrap();
+            if let Some(attrs) = llvm_func_attrs.as_deref() {
+                self.export_llvm_attributes(attrs, output)?;
+            }
+
             // Mark every emitted device function `convergent` (attr group #0).
             // GPU code is convergent-by-default, as in Clang/nvcc: a function
             // that (transitively) performs a barrier / shuffle / vote must not
@@ -1112,11 +1116,13 @@ impl<'a> ModuleExportState<'a> {
             // alwaysinline (from #[inline(always)]) and !dbg are independent:
             // either, both, or neither can be present. Emit the inline keyword
             // before the convergent attr group #0, then the debug scope.
-            let inline_attr = if is_alwaysinline { "alwaysinline " } else { "" };
+            if is_alwaysinline {
+                write!(output, " alwaysinline").unwrap();
+            }
             if let Some(scope_id) = debug_scope {
-                writeln!(output, ") {inline_attr}#0 !dbg !{scope_id} {{").unwrap();
+                writeln!(output, " #0 !dbg !{scope_id} {{").unwrap();
             } else {
-                writeln!(output, ") {inline_attr}#0 {{").unwrap();
+                writeln!(output, " #0 {{").unwrap();
             }
             self.convergent_used = true;
 

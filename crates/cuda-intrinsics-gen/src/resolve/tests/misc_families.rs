@@ -187,6 +187,7 @@ fn debug_control_compact_schema_is_reserved_for_aggregation() {
         sparse_mma_integer: None,
         sparse_mma_f8f6f4_f32: None,
         sparse_mma_f8f6f4_f16: None,
+        sparse_mma_fp8_f32: None,
         sparse_mma_ordered_ampere_float: None,
         prmt: None,
         packed_conversion_fp8: None,
@@ -455,6 +456,7 @@ fn wgmma_control_compact_schema_is_reserved_for_aggregation() {
         sparse_mma_integer: None,
         sparse_mma_f8f6f4_f32: None,
         sparse_mma_f8f6f4_f16: None,
+        sparse_mma_fp8_f32: None,
         sparse_mma_ordered_ampere_float: None,
         prmt: None,
         packed_conversion_fp8: None,
@@ -691,7 +693,9 @@ fn cp_async_mbarrier_recipes_fail_closed() {
     );
 
     let mut wrong_floor = arrive.clone();
-    wrong_floor.minimum_sm = Some("sm_90".into());
+    // Keep the PTX introduction bound valid so the recipe checks this SM.
+    wrong_floor.minimum_sm = Some("sm_75".into());
+    validate_arch_introduction_floor(&wrong_floor).unwrap();
     reject(&wrong_floor, declaration, "effects or target floor");
 
     let mut wrong_llvm_route = arrive.clone();
@@ -820,7 +824,9 @@ fn mbarrier_basic_recipes_fail_closed() {
     );
 
     let mut wrong_sm_floor = init.clone();
-    wrong_sm_floor.minimum_sm = Some("sm_90".into());
+    // PTX 7.0 can name sm_75, but this recipe requires sm_80.
+    wrong_sm_floor.minimum_sm = Some("sm_75".into());
+    validate_arch_introduction_floor(&wrong_sm_floor).unwrap();
     reject(&wrong_sm_floor, init_declaration, "effects or target floor");
 
     let mut wrong_llvm_route = init.clone();

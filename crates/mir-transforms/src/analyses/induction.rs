@@ -42,7 +42,9 @@
 //! The **trip count** is how many times the loop body runs. We read it off the
 //! header's exit test `IV <pred> bound` (e.g. `i < 16`) when `init`, `step`, and
 //! a constant `bound` are all known. For `i = 0; i < 16; i += 4` the trip count
-//! is 4.
+//! is 4. The test may also add a constant to the counter first, as in
+//! `i + 2 <= 16` ("a whole tile of two still fits"); that is the same as
+//! `i <= 14` when the addition does not wrap.
 //!
 //! This is a small, reusable stand-in for full scalar evolution that the
 //! unroller (and later loop passes) build on. It is deliberately cautious:
@@ -123,18 +125,26 @@ pub struct LoopRecurrences {
     /// Which header argument is the counter the loop tests against to decide
     /// whether to keep going (its index in `args`), if we found one.
     pub primary_iv: Option<usize>,
-    /// The loop's limit as a plain number, from a test `IV <pred> bound`, when
-    /// `bound` is a compile-time constant.
+    /// The loop's limit as a plain number, when it is a compile-time constant.
+    /// It is normalized so the body runs while `IV <continue_pred> bound`: for
+    /// a test written `IV + iv_offset <pred> n` it is `n - iv_offset`.
     pub bound: Option<i128>,
-    /// The same limit as an IR value rather than a number. The limit can be a
-    /// value only known at runtime (e.g. an array length), which is fine for
-    /// partial unrolling, so we keep the value here even when `bound` is `None`.
+    /// The value the exit test actually compares against, as written (`n`, not
+    /// `n - iv_offset`). It can be a value only known at runtime (e.g. an array
+    /// length), which is fine for partial unrolling, so we keep it here even
+    /// when `bound` is `None`.
     pub bound_value: Option<Value>,
+    /// The constant the exit test adds to the counter before comparing: the
+    /// body runs while `IV + iv_offset <continue_pred> bound_value`. It is 0 for
+    /// `i < n`, 2 for `i + 2 <= n`, and -1 for `i - 1 < n`.
+    pub iv_offset: i128,
     /// The test that keeps the loop going: the body runs while
     /// `IV <continue_pred> bound` holds (e.g. `<` for `while i < n`).
     pub continue_pred: Option<CmpPred>,
     /// How many times the body runs, when `init`, `step`, `bound`, and the
-    /// predicate are all known constants; `None` otherwise.
+    /// predicate are all known constants; `None` otherwise. This is the count
+    /// over mathematical integers: consumers must prove that the counter and
+    /// its exit-test offset do not wrap in the actual integer type.
     pub trip_count: Option<u64>,
 }
 
@@ -253,8 +263,12 @@ pub fn analyze(
 
     // Read the header's exit test to find the counter it checks, the limit, and
     // the keep-going predicate.
-    let (primary_iv, bound, bound_value, continue_pred) =
-        analyze_guard(ctx, info, id, &header_args, &args);
+    let guard = analyze_guard(ctx, info, id, &header_args, &args);
+    let primary_iv = guard.as_ref().map(|g| g.iv);
+    let bound = guard.as_ref().and_then(|g| g.bound);
+    let bound_value = guard.as_ref().map(|g| g.bound_value);
+    let iv_offset = guard.as_ref().map_or(0, |g| g.offset);
+    let continue_pred = guard.as_ref().map(|g| g.pred);
 
     let trip_count = match (primary_iv, bound, continue_pred) {
         (Some(iv), Some(b), Some(p)) => match &args[iv] {
@@ -269,6 +283,7 @@ pub fn analyze(
         primary_iv,
         bound,
         bound_value,
+        iv_offset,
         continue_pred,
         trip_count,
     }
@@ -390,7 +405,7 @@ fn classify_arg(
 
     // Every back-edge must carry `arg + c`, `c + arg`, or `arg - c`, and every
     // path must agree on c. Choosing one arbitrary latch is unsound.
-    let mut steps = values.iter().map(|&value| step_of(ctx, value, arg));
+    let mut steps = values.iter().map(|&value| constant_offset(ctx, value, arg));
     let first_step = steps.next().flatten();
     if let Some(step) = first_step
         && steps.all(|candidate| candidate == Some(step))
@@ -409,9 +424,11 @@ fn classify_arg(
     ArgKind::Reduction
 }
 
-/// If `v` is `arg + c`, `c + arg`, or `arg - c` for a constant `c`, return the
-/// per-iteration step (`c`, or `-c` for the subtraction). `None` otherwise.
-fn step_of(ctx: &Context, v: Value, arg: Value) -> Option<i128> {
+/// If `v` is `arg + c`, `c + arg`, or `arg - c` for a constant `c`, return how
+/// far `v` is from `arg` (`c`, or `-c` for the subtraction). `None` otherwise.
+/// On a latch edge this is the per-iteration step; in an exit test it is the
+/// offset added to the counter before comparing.
+fn constant_offset(ctx: &Context, v: Value, arg: Value) -> Option<i128> {
     let def = v.defining_op()?;
     if Operation::get_op::<MirAddOp>(def, ctx).is_some() {
         let a = def.deref(ctx).get_operand(0);
@@ -432,33 +449,53 @@ fn step_of(ctx: &Context, v: Value, arg: Value) -> Option<i128> {
     None
 }
 
+/// A header exit test the analysis understood: the body runs while
+/// `header_args[iv] + offset <pred> bound_value`.
+struct Guard {
+    iv: usize,
+    offset: i128,
+    /// `bound_value - offset` when `bound_value` is a constant, so the body
+    /// runs while `IV <pred> bound`.
+    bound: Option<i128>,
+    bound_value: Value,
+    pred: CmpPred,
+}
+
+/// If `v` is `a +/- c` for a header argument `a` and constant `c`, return
+/// the argument's index and the offset.
+fn header_arg_plus_constant(
+    ctx: &Context,
+    v: Value,
+    header_args: &[Value],
+) -> Option<(usize, i128)> {
+    header_args
+        .iter()
+        .enumerate()
+        .find_map(|(i, &a)| constant_offset(ctx, v, a).map(|c| (i, c)))
+}
+
 /// Read the header's conditional branch (its `i < n`-style exit test) and pull
-/// out three things: which header argument is the counter being tested, the
-/// limit it is compared against (as a constant when possible, always as a
-/// value), and the predicate under which the body keeps running (so the loop
-/// continues while `IV <pred> bound`). Returns all-`None` if the header doesn't
-/// have a recognisable counted-loop test.
+/// out which header argument is the counter being tested, the constant added to
+/// it before the comparison, the limit it is compared against (as a constant
+/// when possible, always as a value), and the predicate under which the body
+/// keeps running. Returns `None` if the header doesn't have a recognisable
+/// counted-loop test.
 fn analyze_guard(
     ctx: &Context,
     info: &LoopInfo,
     id: LoopId,
     header_args: &[Value],
     args: &[ArgKind],
-) -> (Option<usize>, Option<i128>, Option<Value>, Option<CmpPred>) {
+) -> Option<Guard> {
     let l = &info.loops()[id];
-    let term = match l.header.deref(ctx).get_terminator(ctx) {
-        Some(t) => t,
-        None => return (None, None, None, None),
-    };
+    let term = l.header.deref(ctx).get_terminator(ctx)?;
     // Successor position and operand 0 have true/false-condition meaning only
     // for `mir.cond_br`. Do not infer a guard from another two-way branch op that
     // happens to expose the same raw operation layout.
-    if Operation::get_op::<MirCondBranchOp>(term, ctx).is_none() {
-        return (None, None, None, None);
-    }
+    Operation::get_op::<MirCondBranchOp>(term, ctx)?;
     let succs: Vec<Ptr<BasicBlock>> = term.deref(ctx).successors().collect();
     if succs.len() != 2 {
-        return (None, None, None, None);
+        return None;
     }
     // The header branches two ways: into the body, or out of the loop. Find
     // which of the two successors is the body (the one still inside the loop).
@@ -467,7 +504,7 @@ fn analyze_guard(
     } else if l.blocks.contains(&succs[1]) {
         1
     } else {
-        return (None, None, None, None);
+        return None;
     };
     // The branch's first operand is the boolean condition; the body is the
     // successor taken when that condition is true (successor 0 is the true side).
@@ -477,14 +514,7 @@ fn analyze_guard(
     let (cmp_val, negated) = unwrap_not(ctx, cond);
     let body_when_cmp_true = (body_idx == 0) ^ negated;
 
-    let def = match cmp_val.defining_op() {
-        Some(d) => d,
-        None => return (None, None, None, None),
-    };
-    let (pred_written, lhs, rhs) = match match_cmp(ctx, def) {
-        Some(t) => t,
-        None => return (None, None, None, None),
-    };
+    let (pred_written, lhs, rhs) = match_cmp(ctx, cmp_val.defining_op()?)?;
     // We want the predicate that is true when the body runs. If the body runs
     // when the comparison is true, that's the comparison itself; if it runs when
     // the comparison is false, flip the comparison to its opposite.
@@ -499,25 +529,45 @@ fn analyze_guard(
     // on the right, swap the predicate so we always end up with `IV <pred> bound`.
     let iv_is_lhs = header_args.iter().position(|&a| a == lhs);
     let iv_is_rhs = header_args.iter().position(|&a| a == rhs);
-    let (iv_index, bound_val) = match (iv_is_lhs, iv_is_rhs) {
-        (Some(idx), _) => (idx, rhs),
+    let (iv_index, offset, bound_val) = match (iv_is_lhs, iv_is_rhs) {
+        (Some(idx), _) => (idx, 0, rhs),
         (None, Some(idx)) => {
             pred = pred.swap();
-            (idx, lhs)
+            (idx, 0, lhs)
         }
-        _ => return (None, None, None, None),
+        // Neither side is a header argument itself. The test may still be
+        // `i + c <pred> n` (or `n <pred> i + c`), with the counter plus a
+        // constant on exactly one side.
+        (None, None) => match (
+            header_arg_plus_constant(ctx, lhs, header_args),
+            header_arg_plus_constant(ctx, rhs, header_args),
+        ) {
+            (Some((idx, c)), None) => (idx, c, rhs),
+            (None, Some((idx, c))) => {
+                pred = pred.swap();
+                (idx, c, lhs)
+            }
+            _ => return None,
+        },
     };
     // The thing being tested must actually be a counter for this to be a
     // counted loop.
     if !matches!(args[iv_index], ArgKind::BasicIv { .. }) {
-        return (None, None, None, None);
+        return None;
     }
-    (
-        Some(iv_index),
-        const_i128(ctx, bound_val),
-        Some(bound_val),
-        Some(pred),
-    )
+    // `IV + offset <pred> n` is `IV <pred> n - offset`. A limit the analysis
+    // cannot represent is no recognizable test at all.
+    let bound = match const_i128(ctx, bound_val) {
+        Some(n) => Some(n.checked_sub(offset)?),
+        None => None,
+    };
+    Some(Guard {
+        iv: iv_index,
+        offset,
+        bound,
+        bound_value: bound_val,
+        pred,
+    })
 }
 
 /// How many times the body runs for a loop that continues while

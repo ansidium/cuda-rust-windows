@@ -128,6 +128,7 @@ pub mod conversion_interface;
 pub mod convert;
 pub mod helpers;
 pub mod lowering;
+mod packed_shared_local_storage;
 pub mod scalarize_block_args;
 pub mod type_conversion_interface;
 mod wgmma_deferred_accumulator;
@@ -184,6 +185,23 @@ pub struct LoweringOptions {
     pub allow_fma_contraction: bool,
     /// Intrinsic ABI expected by the selected LLVM-to-device backend.
     pub intrinsic_backend: IntrinsicBackend,
+    /// Stable identity of the compilation this module belongs to, woven into
+    /// generated module-scope symbols (`__shared_mem_*`, `__device_global_*`,
+    /// `__dynamic_smem_*`).
+    ///
+    /// The per-module counters below make the counter-named families unique
+    /// within one module, but every module starts its counters at zero, so
+    /// two modules lowered from different crates both define
+    /// `__shared_mem_0`; a dynamic-pool owner shared across crates likewise
+    /// repeats its `__dynamic_smem_<owner>` extern in both. Their PTX is
+    /// textually concatenated by `load_all_ptx_bundles_merged`, where a
+    /// duplicate definition fails driver JIT compilation and duplicate
+    /// extern declarations silently keep the first alignment (#1277). A
+    /// caller whose output can be merged with other compilations passes a
+    /// value that is stable for one compilation and distinct across crates —
+    /// `rustc-codegen-cuda` passes the crate's `StableCrateId` hash. `None`
+    /// preserves the undecorated historical names.
+    pub module_disambiguator: Option<u64>,
 }
 
 impl Default for LoweringOptions {
@@ -191,6 +209,7 @@ impl Default for LoweringOptions {
         Self {
             allow_fma_contraction: true,
             intrinsic_backend: IntrinsicBackend::LlvmNvptx,
+            module_disambiguator: None,
         }
     }
 }
@@ -391,6 +410,11 @@ pub fn lower_mir_to_llvm_with_options(
     // every kernel-to-helper requirement while the complete MIR call graph is
     // still available; function conversion removes that graph incrementally.
     lowering::propagate_kernel_dynamic_shared_alignments(ctx, module_op);
+    // Prove the complete address-use path for every narrow packed-AS3 carrier
+    // local immediately before conversion. The resulting per-op TypeAttrs are
+    // lowering capabilities, not inferred provenance: calls, block arguments,
+    // casts, nested projections, returns, and unknown uses fail closed here.
+    packed_shared_local_storage::prepare_packed_shared_local_storage(ctx, module_op)?;
     let mut conversion = MirToLlvmConversionDriver {
         shared_globals: FxHashMap::default(),
         device_globals: FxHashMap::default(),

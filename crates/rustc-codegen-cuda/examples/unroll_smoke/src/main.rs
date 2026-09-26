@@ -45,6 +45,43 @@ mod kernels {
         }
     }
 
+    /// Unrolling makes the shift counts constant while retaining their types.
+    /// Folding must handle counts wider and narrower than the shifted value,
+    /// and preserve arithmetic versus logical right shifts.
+    #[kernel]
+    pub fn full_mixed_width_shifts(
+        mut left: DisjointSlice<u32>,
+        mut arithmetic: DisjointSlice<i32>,
+        mut logical: DisjointSlice<u64>,
+    ) {
+        let (Some(left), Some(arithmetic), Some(logical)) = (
+            left.get_mut(thread::index_1d()),
+            arithmetic.get_mut(thread::index_1d()),
+            logical.get_mut(thread::index_1d()),
+        ) else {
+            return;
+        };
+        let mut left_bits = 0u32;
+        let mut signed_sum = 0i32;
+        let mut i = 0usize;
+        #[unroll]
+        while i < 4 {
+            left_bits |= 1u32 << (2 * i);
+            signed_sum += -128i32 >> i;
+            i += 1;
+        }
+        let mut right_bits = 0u64;
+        let mut j = 0u8;
+        #[unroll]
+        while j < 4 {
+            right_bits |= (1u64 << 63) >> j;
+            j += 1;
+        }
+        *left = left_bits;
+        *arithmetic = signed_sum;
+        *logical = right_bits;
+    }
+
     /// Partial unroll (by 4) of a runtime-trip-count loop: `out[tid]` is the
     /// sum `0 + 1 + ... + (n-1) == n*(n-1)/2`.
     #[kernel]
@@ -357,6 +394,54 @@ mod kernels {
             *out_elem = acc;
         }
     }
+
+    /// Exit tests that compare the counter plus a constant, the way one writes
+    /// "stop when a whole tile no longer fits". `while i + 1 <= 4` fully unrolls
+    /// like `while i < 4` (`1 + 4 + 16 + 64 = 85`); the tile walk
+    /// `while d + 2 <= 8` visits `0 + 2 + 4 + 6 = 12`; and `#[unroll(4)]` on
+    /// `while j + 1 <= n` sums `j` over `0..n`, `n*(n-1)/2`.
+    #[allow(clippy::int_plus_one)]
+    #[kernel]
+    pub fn offset_exit_tests(
+        mut bits: DisjointSlice<u32>,
+        mut walk: DisjointSlice<u32>,
+        mut partial: DisjointSlice<u32>,
+        n: u32,
+    ) {
+        let (Some(bits), Some(walk), Some(partial)) = (
+            bits.get_mut(thread::index_1d()),
+            walk.get_mut(thread::index_1d()),
+            partial.get_mut(thread::index_1d()),
+        ) else {
+            return;
+        };
+        let mut set = 0u32;
+        let mut i = 0usize;
+        #[unroll]
+        while i + 1 <= 4 {
+            set |= 1u32 << (2 * i);
+            i += 1;
+        }
+        const TILE: usize = 2;
+        const WIDTH: usize = 8;
+        let mut visited = 0u32;
+        let mut d = 0usize;
+        #[unroll]
+        while d + TILE <= WIDTH {
+            visited += d as u32;
+            d += TILE;
+        }
+        let mut sum = 0u32;
+        let mut j = 0u32;
+        #[unroll(4)]
+        while j + 1 <= n {
+            sum = sum.wrapping_add(j);
+            j += 1;
+        }
+        *bits = set;
+        *walk = visited;
+        *partial = sum;
+    }
 }
 
 fn main() {
@@ -379,6 +464,35 @@ fn main() {
     // SAFETY: launch shape/resources match the kernel; buffers cover its accesses.
     unsafe { module.full_unroll(stream.as_ref(), cfg, &mut d_full) }.expect("launch full_unroll");
     let got_full = d_full.to_host_vec(&stream).unwrap();
+
+    let mut d_shift_left = DeviceBuffer::<u32>::zeroed(&stream, N).unwrap();
+    let mut d_shift_arithmetic = DeviceBuffer::<i32>::zeroed(&stream, N).unwrap();
+    let mut d_shift_logical = DeviceBuffer::<u64>::zeroed(&stream, N).unwrap();
+    // SAFETY: each thread writes its own element in three separate buffers.
+    unsafe {
+        module.full_mixed_width_shifts(
+            stream.as_ref(),
+            cfg,
+            &mut d_shift_left,
+            &mut d_shift_arithmetic,
+            &mut d_shift_logical,
+        )
+    }
+    .expect("launch full_mixed_width_shifts");
+    let got_shift_left = d_shift_left.to_host_vec(&stream).unwrap();
+    let got_shift_arithmetic = d_shift_arithmetic.to_host_vec(&stream).unwrap();
+    let got_shift_logical = d_shift_logical.to_host_vec(&stream).unwrap();
+    assert_eq!(got_shift_left, vec![85; N], "mixed-width left shift");
+    assert_eq!(
+        got_shift_arithmetic,
+        vec![-240; N],
+        "arithmetic right shift"
+    );
+    assert_eq!(
+        got_shift_logical,
+        vec![0xf000_0000_0000_0000; N],
+        "logical right shift"
+    );
 
     let trip: u32 = 10;
     let mut d_part = DeviceBuffer::<u32>::zeroed(&stream, N).unwrap();
@@ -462,6 +576,39 @@ fn main() {
     unsafe { module.outer_partial(stream.as_ref(), cfg, &mut d_opart, trip) }
         .expect("launch outer_partial");
     let got_opart = d_opart.to_host_vec(&stream).unwrap();
+
+    for offset_trip in [7u32, 16] {
+        let mut d_bits = DeviceBuffer::<u32>::zeroed(&stream, N).unwrap();
+        let mut d_walk = DeviceBuffer::<u32>::zeroed(&stream, N).unwrap();
+        let mut d_offset_part = DeviceBuffer::<u32>::zeroed(&stream, N).unwrap();
+        // SAFETY: each thread writes its own element in three separate buffers.
+        unsafe {
+            module.offset_exit_tests(
+                stream.as_ref(),
+                cfg,
+                &mut d_bits,
+                &mut d_walk,
+                &mut d_offset_part,
+                offset_trip,
+            )
+        }
+        .expect("launch offset_exit_tests");
+        assert_eq!(
+            d_bits.to_host_vec(&stream).unwrap(),
+            vec![85; N],
+            "offset exit test `i + 1 <= 4`"
+        );
+        assert_eq!(
+            d_walk.to_host_vec(&stream).unwrap(),
+            vec![12; N],
+            "tile walk `d + 2 <= 8`"
+        );
+        assert_eq!(
+            d_offset_part.to_host_vec(&stream).unwrap(),
+            vec![offset_trip * (offset_trip - 1) / 2; N],
+            "partial offset exit test `j + 1 <= {offset_trip}`"
+        );
+    }
 
     let mut failures = 0usize;
     let want_part = trip * (trip - 1) / 2;

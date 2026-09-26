@@ -9,7 +9,10 @@
 
 mod common;
 
-use common::{counted_loop, counted_loop_from, mir_ctx, multi_latch_counted_loop};
+use common::{
+    CountedLoop, OffsetBound, counted_loop, counted_loop_from, i32t, i128t, mir_ctx,
+    multi_latch_counted_loop, offset_counted_loop, offset_counted_loop_iv_on_right, u32t,
+};
 use mir_transforms::analyses::induction::{ArgKind, CmpPred, analyze};
 use mir_transforms::analyses::loop_info::LoopInfo;
 use pliron::graph::dominance::DomInfo;
@@ -27,6 +30,21 @@ fn recurrences_for(n: i64) -> mir_transforms::analyses::induction::LoopRecurrenc
     let id = info.innermost_loop(lp.header).unwrap();
     let ph = info.preheader(&ctx, lp.region, id).unwrap();
     analyze(&ctx, &info, id, ph)
+}
+
+/// Run the analysis on an already built loop.
+fn recurrences_of(
+    ctx: &pliron::context::Context,
+    lp: &CountedLoop,
+) -> mir_transforms::analyses::induction::LoopRecurrences {
+    let mut dom = DomInfo::default();
+    let info = {
+        let dt = dom.get_dom_tree(ctx, lp.region);
+        LoopInfo::compute(ctx, lp.region, dt)
+    };
+    let id = info.innermost_loop(lp.header).unwrap();
+    let ph = info.preheader(ctx, lp.region, id).unwrap();
+    analyze(ctx, &info, id, ph)
 }
 
 #[test]
@@ -149,5 +167,133 @@ fn rejects_inconsistent_iv_steps_across_latches() {
         !matches!(rec.args[1], ArgKind::BasicIv { .. }),
         "different latch steps must not be guessed from an arbitrary latch"
     );
+    assert_eq!(rec.trip_count, None);
+}
+
+/// `while i + 1 <= 4` tests the counter plus one. The analysis records the
+/// offset and normalizes the limit to `i <= 3`, so the loop runs four times.
+#[test]
+fn counter_plus_constant_exit_test_is_recognized() {
+    let mut ctx = mir_ctx();
+    let u32 = u32t(&mut ctx);
+    let lp = offset_counted_loop(&mut ctx, u32, 0, 1, 1, CmpPred::Le, OffsetBound::Const(4));
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert_eq!(rec.primary_iv, Some(1));
+    assert_eq!(rec.iv_offset, 1);
+    assert_eq!(rec.continue_pred, Some(CmpPred::Le));
+    assert_eq!(rec.bound, Some(3));
+    assert_eq!(rec.trip_count, Some(4));
+}
+
+/// `while i + 2 < 8` with `i += 2` runs for `i = 0, 2, 4`: three trips.
+#[test]
+fn counter_offset_and_step_combine_in_the_trip_count() {
+    let mut ctx = mir_ctx();
+    let u32 = u32t(&mut ctx);
+    let lp = offset_counted_loop(&mut ctx, u32, 0, 2, 2, CmpPred::Lt, OffsetBound::Const(8));
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert_eq!(rec.primary_iv, Some(1));
+    assert_eq!(rec.iv_offset, 2);
+    assert_eq!(rec.continue_pred, Some(CmpPred::Lt));
+    assert_eq!(rec.bound, Some(6));
+    assert_eq!(rec.trip_count, Some(3));
+}
+
+/// `while 8 >= i + 2` is the same test as `while i + 2 <= 8`: the predicate is
+/// swapped and the counter found on the right.
+#[test]
+fn counter_offset_on_the_right_side_is_swapped() {
+    let mut ctx = mir_ctx();
+    let u32 = u32t(&mut ctx);
+    let lp =
+        offset_counted_loop_iv_on_right(&mut ctx, u32, 0, 1, 2, CmpPred::Ge, OffsetBound::Const(8));
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert_eq!(rec.primary_iv, Some(1));
+    assert_eq!(rec.iv_offset, 2);
+    assert_eq!(rec.continue_pred, Some(CmpPred::Le));
+    assert_eq!(rec.bound, Some(6));
+    assert_eq!(rec.trip_count, Some(7));
+}
+
+/// `while i - 1 < 4` has offset -1, so the normalized limit is `i < 5` and a
+/// signed counter from 0 runs five times.
+#[test]
+fn counter_minus_constant_exit_test_raises_the_limit() {
+    let mut ctx = mir_ctx();
+    let i32 = i32t(&mut ctx);
+    let lp = offset_counted_loop(&mut ctx, i32, 0, 1, -1, CmpPred::Lt, OffsetBound::Const(4));
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert_eq!(rec.primary_iv, Some(1));
+    assert_eq!(rec.iv_offset, -1);
+    assert_eq!(rec.continue_pred, Some(CmpPred::Lt));
+    assert_eq!(rec.bound, Some(5));
+    assert_eq!(rec.trip_count, Some(5));
+}
+
+/// `while i - 1 <= i128::MAX` would need the limit `i128::MAX + 1`, which the
+/// analysis cannot represent. It reports no exit test rather than a wrong one.
+#[test]
+fn counter_offset_whose_limit_overflows_is_not_recognized() {
+    let mut ctx = mir_ctx();
+    let i128 = i128t(&mut ctx);
+    let lp = offset_counted_loop(
+        &mut ctx,
+        i128,
+        0,
+        1,
+        -1,
+        CmpPred::Le,
+        OffsetBound::Const(i128::MAX),
+    );
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert!(matches!(rec.args[1], ArgKind::BasicIv { init: 0, step: 1 }));
+    assert_eq!(rec.primary_iv, None);
+    assert_eq!(rec.bound, None);
+    assert_eq!(rec.continue_pred, None);
+    assert_eq!(rec.trip_count, None);
+}
+
+/// Unsigned constants in the offset and the limit must be zero-extended.
+/// `while i + 0x8000_0000 < 0x8000_0004` is a four-trip loop.
+#[test]
+fn high_bit_unsigned_offset_keeps_its_positive_value() {
+    let mut ctx = mir_ctx();
+    let u32 = u32t(&mut ctx);
+    let lp = offset_counted_loop(
+        &mut ctx,
+        u32,
+        0,
+        1,
+        2_147_483_648,
+        CmpPred::Lt,
+        OffsetBound::Const(2_147_483_652),
+    );
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert_eq!(rec.primary_iv, Some(1));
+    assert_eq!(rec.iv_offset, 2_147_483_648);
+    assert_eq!(rec.bound, Some(4));
+    assert_eq!(rec.trip_count, Some(4));
+}
+
+/// `while i + 1 < acc + 8` compares two values that both change in the loop.
+/// Neither side is a limit, so there is no counted exit test, though `i` is
+/// still a counter.
+#[test]
+fn offsets_on_both_sides_are_not_a_counted_exit_test() {
+    let mut ctx = mir_ctx();
+    let u32 = u32t(&mut ctx);
+    let lp = offset_counted_loop(&mut ctx, u32, 0, 1, 1, CmpPred::Lt, OffsetBound::AccPlus(8));
+    let rec = recurrences_of(&ctx, &lp);
+
+    assert!(matches!(rec.args[1], ArgKind::BasicIv { init: 0, step: 1 }));
+    assert_eq!(rec.primary_iv, None);
+    assert_eq!(rec.bound_value, None);
+    assert_eq!(rec.continue_pred, None);
     assert_eq!(rec.trip_count, None);
 }

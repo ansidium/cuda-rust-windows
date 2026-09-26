@@ -101,8 +101,9 @@ pub use kernel_family::{
     NoKernelSelectionCache, SelectedVariant, SelectionMode, SelectionSource,
 };
 pub use launch::{
-    CudaKernel, GenericCudaKernel, HasLength, KernelScalar, ReadOnly, RowWidth, RowWidthOwned,
-    Scalar, WriteOnly, push_kernel_device_slice, push_kernel_row_width_device_slice,
+    CudaKernel, CudaKernelArgument, CudaKernelArgumentKind, CudaKernelScalarKind,
+    CudaKernelSignature, GenericCudaKernel, HasLength, KernelScalar, ReadOnly, RowWidth,
+    RowWidthOwned, Scalar, WriteOnly, push_kernel_device_slice, push_kernel_row_width_device_slice,
     push_kernel_scalar, read_only_device_buffer_arg, row_width_device_buffer_arg,
     writable_device_buffer_arg,
 };
@@ -134,7 +135,7 @@ pub use cuda_async::simt::launch::{
 
 pub use embedded::{
     EmbeddedModuleError, load_all_ptx_bundles_merged, load_embedded_module,
-    load_first_embedded_module,
+    load_embedded_module_from_anchor, load_first_embedded_module, merge_ptx_bundles,
 };
 pub use entry_registry::{
     diagnose_generic_kernel_load_error, divergent_type_id_entries, panic_generic_kernel_load_failed,

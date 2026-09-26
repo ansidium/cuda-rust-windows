@@ -5,13 +5,15 @@
 
 //! End-to-end ABI regression coverage for packed aggregates.
 //!
-//! This example exercises eight paths that must agree on the same rustc byte
+//! This example exercises nine paths that must agree on the same rustc byte
 //! layout:
 //!
 //! - packed structs passed by value across the host -> kernel boundary;
 //! - packed structs passed to and returned from an internal device helper;
 //! - packed structs containing one shared pointer returned from an internal
 //!   device helper through a target-stable generic-pointer carrier;
+//! - direct field projections from that one-shared-pointer value after local
+//!   materialization through the same target-stable carrier;
 //! - packed structs containing multiple direct shared-pointer leaves crossing
 //!   the same internal device ABI;
 //! - packed structs containing recursively nested shared-pointer leaves crossing
@@ -131,13 +133,19 @@ mod kernels {
     #[inline(never)]
     #[device]
     unsafe fn consume_packed_shared(
-        _value: PackedShared,
+        value: PackedShared,
         shared: *mut SharedArray<u32, 1>,
         out: *mut u32,
     ) {
+        // These two projections force the returned packed-AS3 value through a
+        // compiler-owned local. The slot is physically <{ i8, p0 }>; loading
+        // `ptr` reconstructs the semantic AS3 pointer explicitly at the memory
+        // boundary before it is dereferenced.
+        let tag = value.tag;
+        let round_tripped = value.ptr;
         unsafe {
-            (&mut *shared)[0] = (&*shared)[0].wrapping_add(0x0102_0304);
-            out.write(0x22);
+            (&mut *round_tripped)[0] = (&*round_tripped)[0].wrapping_add(0x0102_0304);
+            out.write(u32::from(tag.wrapping_add(1)));
             out.add(1).write((&*shared)[0]);
         }
     }
@@ -231,10 +239,9 @@ mod kernels {
             ptr: raw,
         });
 
-        // Keep the packed AS3 aggregate in SSA across both internal device ABI
-        // boundaries. The raw shared pointer is passed separately for the
-        // observable runtime check so this regression does not require a
-        // target-dependent whole-value packed store/load.
+        // The callee now projects both fields from the returned packed value.
+        // That forces the narrow #1036 local-carrier path while the independent
+        // raw pointer keeps the reconstructed AS3 pointer's write observable.
         unsafe { consume_packed_shared(value, raw, out) };
     }
 
@@ -257,9 +264,8 @@ mod kernels {
         });
 
         // The returned packed value contains two direct AS3 leaves. Keep it in
-        // SSA and pass it whole into another device helper; the raw pointers
-        // remain separate only to make the runtime effect observable before
-        // packed field projections gain carrier-backed local storage.
+        // SSA and pass it whole into another device helper; recursive/multi-leaf
+        // carrier-local projection support remains deliberately out of scope.
         unsafe { consume_packed_shared_pair(value, left, right, out) };
     }
 
@@ -280,9 +286,9 @@ mod kernels {
             pair: SharedPair { left, right },
         });
 
-        // The AS3 leaves live under a nested aggregate. As above, keep the
-        // packed outer value in SSA so this exercises only the internal ABI
-        // carrier generalization and does not depend on packed local storage.
+        // The AS3 leaves live under a nested aggregate. Keep the packed outer
+        // value in SSA so this still exercises only the internal ABI carrier
+        // generalization, not recursive packed local storage.
         unsafe { consume_packed_nested_shared(value, left, right, out) };
     }
 
@@ -303,10 +309,9 @@ mod kernels {
             ptrs: [left, right],
         });
 
-        // The two AS3 leaves live inside one fixed array. Keep the packed
-        // value in SSA so the return boundary must rebuild the array through
-        // the bounded target-stable carrier without relying on packed local
-        // storage or field projection support.
+        // The two AS3 leaves live inside one fixed array. Keep the packed value
+        // in SSA so the return boundary rebuilds the bounded target-stable
+        // carrier without widening the narrow local-storage lane.
         unsafe { consume_packed_shared_array(value, left, right, out) };
     }
 
@@ -618,7 +623,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&bytes2[2..6], &0xd0e0_f001u32.to_le_bytes());
 
     println!(
-        "packed_aggregate_abi: PASS (runtime values, recursive/multi-leaf/bounded-array packed shared internal ABI, whole-value load/store, and PTX parameter shapes)"
+        "packed_aggregate_abi: PASS (runtime values, direct packed-AS3 carrier-local projections, recursive/multi-leaf/bounded-array packed shared internal ABI, whole-value load/store, and PTX parameter shapes)"
     );
     Ok(())
 }

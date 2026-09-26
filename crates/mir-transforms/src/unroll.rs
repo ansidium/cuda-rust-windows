@@ -18,8 +18,9 @@
 //! small remainder loop for leftover iterations. The frontend records the
 //! request as a `mir.unroll_hint` operation inside that loop.
 //!
-//! The current analysis recognizes explicit counted `while` loops. Range-based
-//! `for` loops are not yet recognized.
+//! The current analysis recognizes explicit counted `while` loops, including an
+//! exit test that adds a constant to the counter (`while i + 2 <= n`).
+//! Range-based `for` loops are not yet recognized.
 //!
 //! Several `continue` paths are supported: the pass joins their back-edges
 //! before unrolling. Full `#[unroll]` also preserves early `break` paths and
@@ -538,9 +539,17 @@ fn analyze_shape(
     let header = l.header;
     let latch = l.latches[0];
 
-    let iv_idx = rec
-        .primary_iv
-        .ok_or("no recognized induction variable (loop counter)")?;
+    let iv_idx = match rec.primary_iv {
+        Some(iv_idx) => iv_idx,
+        None if rec
+            .args
+            .iter()
+            .any(|arg| matches!(arg, ArgKind::BasicIv { .. })) =>
+        {
+            return Err("the loop has a counter, but its exit test is not of the form `counter <op> bound` (or `counter + const <op> bound`)".into());
+        }
+        None => return Err("no recognized induction variable (loop counter)".into()),
+    };
     let (iv_init, iv_step) = match &rec.args[iv_idx] {
         ArgKind::BasicIv { init, step } => (*init, *step),
         _ => return Err("the loop counter is not a simple induction variable".into()),
@@ -869,6 +878,35 @@ fn full_iv_stays_in_range(ctx: &Context, shape: &LoopShape, trip: i128) -> bool 
     (min..=max).contains(&shape.iv_init) && (min..=max).contains(&final_iv)
 }
 
+/// With an exit test `IV + offset <pred> bound`, the header computes
+/// `init + k*step + offset` for every `k` from 0 to the trip count. That sum
+/// changes monotonically in `k`, so it stays in the IV type's range exactly when
+/// its first and last values do; otherwise the fixed-width test can wrap and
+/// disagree with the trip count.
+fn full_exit_test_stays_in_range(
+    ctx: &Context,
+    shape: &LoopShape,
+    trip: i128,
+    offset: i128,
+) -> bool {
+    if offset == 0 {
+        return true;
+    }
+    let Some((min, max)) = integer_value_bounds(ctx, shape.iv_type) else {
+        return false;
+    };
+    let Some(final_iv) = trip
+        .checked_mul(shape.iv_step)
+        .and_then(|delta| shape.iv_init.checked_add(delta))
+    else {
+        return false;
+    };
+    [shape.iv_init, final_iv].iter().all(|&iv| {
+        iv.checked_add(offset)
+            .is_some_and(|tested| (min..=max).contains(&tested))
+    })
+}
+
 /// A grouped positive-IV span must be small enough to cross the type boundary
 /// at most once. The runtime guard can then detect that crossing reliably.
 fn partial_span_is_representable(ctx: &Context, ty: TypeHandle, span: i128) -> bool {
@@ -929,6 +967,11 @@ fn full_unroll(
         return Ok(UnrollOutcome::Skipped(
             "the loop counter may wrap before the computed full-unroll trip count is reached"
                 .into(),
+        ));
+    }
+    if !full_exit_test_stays_in_range(ctx, &s, trip, rec.iv_offset) {
+        return Ok(UnrollOutcome::Skipped(
+            "the exit test's `counter + const` may wrap in the counter's type, so the computed trip count may be wrong".into(),
         ));
     }
 
@@ -1061,8 +1104,8 @@ fn make_const(ctx: &mut Context, ty: TypeHandle, value: i128, before: Ptr<Operat
 /// ```text
 ///   preheader -> main_h(init...)
 ///   main_h(acc, i):                       (i = counter, acc = carried values)
-///       if (i + (factor-1)*step) <pred> bound  -> copy0   (a full group fits)
-///       else                                   -> header  (run the remainder)
+///       if (i + (factor-1)*step) + off <pred> bound  -> copy0   (a full group fits)
+///       else                                         -> header  (run the remainder)
 ///   copy0 .. copy(factor-1): the body, factor times, chained; the last copy's
 ///       latch loops back to main_h with (acc', i + factor*step)
 ///   header/.../latch: the original loop, now just the leftover tail
@@ -1224,9 +1267,33 @@ fn partial_unroll(
     };
     let last_off = append_const(ctx, s.iv_type, last_span, main_h);
     let last_iv = append_add(ctx, s.iv_type, mh_iv, last_off, main_h);
-    let within_bound = append_cmp(ctx, pred, last_iv, guard_bound, s.i1_type, main_h);
+    // With an exit test `IV + off <pred> bound`, compare what the source test
+    // computes for the last copy. That sum is only meaningful if it did not
+    // wrap for any copy in the group. It moves monotonically with the counter,
+    // so a positive `off` can only wrap at the last copy and a negative one
+    // only at the first; one more comparison rules that out.
+    let (last_tested, offset_no_wrap) = match rec.iv_offset {
+        0 => (last_iv, None),
+        off if off > 0 => {
+            let off_value = append_const(ctx, s.iv_type, off, main_h);
+            let tested = append_add(ctx, s.iv_type, last_iv, off_value, main_h);
+            let no_wrap = append_cmp(ctx, CmpPred::Gt, tested, last_iv, s.i1_type, main_h);
+            (tested, Some(no_wrap))
+        }
+        off => {
+            let off_value = append_const(ctx, s.iv_type, off, main_h);
+            let tested = append_add(ctx, s.iv_type, last_iv, off_value, main_h);
+            let first_tested = append_add(ctx, s.iv_type, mh_iv, off_value, main_h);
+            let no_wrap = append_cmp(ctx, CmpPred::Lt, first_tested, mh_iv, s.i1_type, main_h);
+            (tested, Some(no_wrap))
+        }
+    };
+    let within_bound = append_cmp(ctx, pred, last_tested, guard_bound, s.i1_type, main_h);
     let no_wrap = append_cmp(ctx, CmpPred::Ge, last_iv, mh_iv, s.i1_type, main_h);
-    let cont = append_bitand(ctx, s.i1_type, within_bound, no_wrap, main_h);
+    let mut cont = append_bitand(ctx, s.i1_type, within_bound, no_wrap, main_h);
+    if let Some(offset_no_wrap) = offset_no_wrap {
+        cont = append_bitand(ctx, s.i1_type, cont, offset_no_wrap, main_h);
+    }
     let entry0 = copies[0].entry;
     let entry0_args = copies[0].entry_args.clone();
     let (flat, segs) =

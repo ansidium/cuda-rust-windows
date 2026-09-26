@@ -15,14 +15,21 @@ use cuda_core::{CudaContext, CudaModule, DriverError};
 use std::sync::Arc;
 use thiserror::Error;
 
+#[cfg(any(target_os = "linux", target_os = "android"))]
+mod mapped_image;
+
 /// Errors while discovering, building, or loading an embedded CUDA module.
 #[derive(Debug, Error)]
 pub enum EmbeddedModuleError {
+    /// The artifact anchor could not be associated with its original mapped file.
+    #[error("cannot read the binary containing the CUDA artifact anchor: {0}")]
+    MappedImage(#[source] std::io::Error),
+
     /// Reading the embedded artifact section failed.
     #[error(transparent)]
     Core(#[from] cuda_core::EmbeddedModuleError),
 
-    /// The named bundle was not present in the current executable.
+    /// The named bundle was not present in the binary that was read.
     #[error("embedded CUDA module '{name}' was not found")]
     ModuleNotFound { name: String },
 
@@ -66,6 +73,52 @@ pub fn load_embedded_module(
     load_bundle(ctx, &bundle)
 }
 
+/// Load a named artifact bundle from the binary containing `anchor`.
+///
+/// Generated non-generic module loaders borrow their artifact anchor, which
+/// the linker places in the same image as the bundle. This works for both an
+/// executable and a shared library, including a library opened by a relative
+/// path before the working directory changes.
+///
+/// On Linux and Android, this requires readable `/proc/self/maps` and
+/// `/proc/self/map_files`. The original mapped file must still be accessible.
+/// A missing, replaced, deleted or unreadable image is an error; it never
+/// causes a search in another binary. Other operating systems are unsupported.
+/// Payload selection and compilation are identical to [`load_embedded_module`].
+pub fn load_embedded_module_from_anchor(
+    ctx: &Arc<CudaContext>,
+    name: &str,
+    anchor: &u8,
+) -> Result<Arc<CudaModule>, EmbeddedModuleError> {
+    let bundle = artifact_bundles_containing(anchor)?
+        .into_iter()
+        .find(|bundle| bundle.name == name)
+        .ok_or_else(|| EmbeddedModuleError::ModuleNotFound {
+            name: name.to_string(),
+        })?;
+    load_bundle(ctx, &bundle)
+}
+
+fn artifact_bundles_containing(
+    anchor: &u8,
+) -> Result<Vec<OwnedArtifactBundle>, EmbeddedModuleError> {
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    {
+        let bytes = mapped_image::read(anchor).map_err(EmbeddedModuleError::MappedImage)?;
+        oxide_artifacts::read_artifact_bundles_from_object_bytes(&bytes)
+            .map_err(cuda_core::EmbeddedModuleError::Artifacts)
+            .map_err(Into::into)
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    {
+        let _ = anchor;
+        Err(EmbeddedModuleError::MappedImage(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "artifact anchor discovery requires Linux or Android procfs",
+        )))
+    }
+}
+
 /// Merge all PTX bundles from the current executable into a single CUDA module.
 ///
 /// When a generic kernel is monomorphized in a consuming crate, its PTX ends
@@ -82,42 +135,7 @@ pub fn load_all_ptx_bundles_merged(
     ctx: &Arc<CudaContext>,
 ) -> Result<Arc<CudaModule>, EmbeddedModuleError> {
     let bundles = artifact_bundles_from_current_exe()?;
-
-    let mut merged = String::new();
-    let mut found_any = false;
-
-    for bundle in &bundles {
-        if let Some(ptx_bytes) = bundle.payload(ArtifactPayloadKind::Ptx) {
-            let ptx_str = std::str::from_utf8(ptx_bytes)
-                .map_err(|_| EmbeddedModuleError::UnsupportedPayload {
-                    name: bundle.name.clone(),
-                })?
-                .trim_end_matches('\0');
-
-            if !found_any {
-                merged.push_str(ptx_str);
-                merged.push('\n');
-                found_any = true;
-            } else {
-                // Strip per-file header directives; only one set is valid in a
-                // concatenated PTX module.
-                let body = strip_ptx_module_headers(ptx_str).map_err(|reason| {
-                    EmbeddedModuleError::InvalidPtx {
-                        name: bundle.name.clone(),
-                        reason,
-                    }
-                })?;
-                merged.push_str(&body);
-                if !body.ends_with('\n') {
-                    merged.push('\n');
-                }
-            }
-        }
-    }
-
-    if !found_any {
-        return Err(EmbeddedModuleError::NoModules);
-    }
+    let merged = merge_ptx_bundles(&bundles)?;
 
     let module = ctx.load_module_from_image(merged.as_bytes())?;
     // Retain the merged module's `.entry` names (a few dozen bytes per
@@ -129,19 +147,136 @@ pub fn load_all_ptx_bundles_merged(
     Ok(module)
 }
 
-fn strip_ptx_module_headers(ptx: &str) -> Result<String, String> {
+/// Merge the PTX payloads of `bundles`, in iteration order, into one PTX
+/// module string: the first PTX bundle keeps its `.version` / `.target` /
+/// `.address_size` header directives, every later one contributes its body
+/// with those directives stripped. Bundles without a PTX payload are skipped.
+///
+/// This is the pure half of [`load_all_ptx_bundles_merged`], exposed so tests
+/// and examples can check order-dependent merge properties: module-scope
+/// symbol uniqueness and extern alignment must hold for every bundle order,
+/// not just the one the current executable happens to embed (#1277).
+pub fn merge_ptx_bundles<'a>(
+    bundles: impl IntoIterator<Item = &'a OwnedArtifactBundle>,
+) -> Result<String, EmbeddedModuleError> {
+    let mut merged = String::new();
+    let mut found_any = false;
+
+    // Keep each bundle's debug file indices distinct in the merged module.
+    let mut file_index_offset = 0;
+
+    for bundle in bundles {
+        if let Some(ptx_bytes) = bundle.payload(ArtifactPayloadKind::Ptx) {
+            let ptx_str = std::str::from_utf8(ptx_bytes)
+                .map_err(|_| EmbeddedModuleError::UnsupportedPayload {
+                    name: bundle.name.clone(),
+                })?
+                .trim_end_matches('\0');
+
+            let strip_headers = found_any;
+            let (body, max_file_index) =
+                prepare_bundle_body(ptx_str, strip_headers, file_index_offset).map_err(
+                    |reason| EmbeddedModuleError::InvalidPtx {
+                        name: bundle.name.clone(),
+                        reason,
+                    },
+                )?;
+            file_index_offset = file_index_offset.max(max_file_index);
+            merged.push_str(&body);
+            if !body.ends_with('\n') {
+                merged.push('\n');
+            }
+            found_any = true;
+        }
+    }
+
+    if !found_any {
+        return Err(EmbeddedModuleError::NoModules);
+    }
+    Ok(merged)
+}
+
+/// Strip repeated headers and shift debug indices past the previous bundles.
+/// Returns the rewritten text and its highest debug file index.
+fn prepare_bundle_body(
+    ptx: &str,
+    strip_headers: bool,
+    file_index_offset: u64,
+) -> Result<(String, u64), String> {
     let document = ptx_parse::Document::parse(ptx).map_err(|error| error.to_string())?;
     let mut edits = ptx_parse::EditScript::new();
-    for directive in document
-        .directives()
-        .iter()
-        .filter(|directive| matches!(directive.name(), ".version" | ".target" | ".address_size"))
+    let mut max_file_index = 0u64;
+
+    for directive in document.directives() {
+        match directive.name() {
+            ".version" | ".target" | ".address_size" if strip_headers => {
+                edits
+                    .delete(directive.line_span())
+                    .map_err(|error| error.to_string())?;
+            }
+            ".file" | ".loc" => {
+                let span = directive.arguments_span();
+                let tokens = document.tokens();
+                let first = tokens.partition_point(|token| token.span().end <= span.start);
+                let arguments: Vec<_> = tokens[first..]
+                    .iter()
+                    .take_while(|token| token.span().start < span.end)
+                    .filter(|token| !token.kind().is_trivia())
+                    .collect();
+                let index = shift_file_index(
+                    &mut edits,
+                    ptx,
+                    arguments.first().copied(),
+                    file_index_offset,
+                )?;
+                max_file_index = max_file_index.max(index);
+                if directive.name() == ".loc" {
+                    for (position, attribute) in arguments.windows(2).enumerate() {
+                        if attribute[0].text(ptx) == "," && attribute[1].text(ptx) == "inlined_at" {
+                            let index = shift_file_index(
+                                &mut edits,
+                                ptx,
+                                arguments.get(position + 2).copied(),
+                                file_index_offset,
+                            )?;
+                            max_file_index = max_file_index.max(index);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let body = edits.apply(ptx).map_err(|error| error.to_string())?;
+    Ok((body, max_file_index))
+}
+
+/// Shift one complete decimal index token, preserving surrounding PTX.
+fn shift_file_index(
+    edits: &mut ptx_parse::EditScript,
+    ptx: &str,
+    token: Option<&ptx_parse::Token>,
+    offset: u64,
+) -> Result<u64, String> {
+    let token = token.ok_or("malformed debug directive: missing file index")?;
+    let text = token.text(ptx);
+    if token.kind() != ptx_parse::TokenKind::Word || !text.bytes().all(|byte| byte.is_ascii_digit())
     {
+        return Err(format!("malformed debug file index: {text:?}"));
+    }
+    let index: u64 = text
+        .parse()
+        .map_err(|_| format!("debug file index out of range: {text:?}"))?;
+    let shifted = index
+        .checked_add(offset)
+        .ok_or("debug file index overflow")?;
+    if offset != 0 {
         edits
-            .delete(directive.line_span())
+            .replace(token.span(), shifted.to_string())
             .map_err(|error| error.to_string())?;
     }
-    edits.apply(ptx).map_err(|error| error.to_string())
+    Ok(shifted)
 }
 
 /// Load the first embedded artifact bundle with a supported payload.
@@ -264,6 +399,52 @@ mod tests {
         );
     }
 
+    fn ptx_bundle(name: &str, ptx: &str) -> OwnedArtifactBundle {
+        use oxide_artifacts::OwnedArtifactPayload;
+        OwnedArtifactBundle {
+            name: name.to_string(),
+            target: "sm_80".to_string(),
+            compile_options: ArtifactCompileOptions::new(),
+            payloads: vec![OwnedArtifactPayload {
+                kind: ArtifactPayloadKind::Ptx,
+                name: name.to_string(),
+                bytes: ptx.as_bytes().to_vec(),
+            }],
+            entries: Vec::new(),
+        }
+    }
+
+    /// The merge is order-explicit: exactly one header set (the first PTX
+    /// bundle's), every body present in iteration order, non-PTX bundles
+    /// skipped. #1277's collision-free-namespace example checks the same
+    /// function under both bundle orders at runtime.
+    #[test]
+    fn merges_bundles_in_iteration_order_with_one_header_set() {
+        let first = ptx_bundle(
+            "first",
+            ".version 8.9\n.target sm_80\n.address_size 64\n.visible .entry a() { ret; }\n",
+        );
+        let second = ptx_bundle(
+            "second",
+            ".version 8.9\n.target sm_80\n.address_size 64\n.visible .entry b() { ret; }\n",
+        );
+        let skipped = bundle_with_target("sm_80");
+
+        let forward = merge_ptx_bundles([&first, &skipped, &second]).unwrap();
+        assert_eq!(forward.matches(".version").count(), 1);
+        assert_eq!(forward.matches(".target sm_80").count(), 1);
+        assert!(forward.find(".entry a()").unwrap() < forward.find(".entry b()").unwrap());
+
+        let reversed = merge_ptx_bundles([&second, &first]).unwrap();
+        assert_eq!(reversed.matches(".version").count(), 1);
+        assert!(reversed.find(".entry b()").unwrap() < reversed.find(".entry a()").unwrap());
+
+        assert!(matches!(
+            merge_ptx_bundles([&skipped]),
+            Err(EmbeddedModuleError::NoModules)
+        ));
+    }
+
     #[test]
     fn strips_only_structural_ptx_module_headers() {
         let ptx = "\
@@ -273,9 +454,104 @@ mod tests {
 .address_size 64
 .visible .entry kernel() { ret; }
 ";
+        let (body, max_file_index) = prepare_bundle_body(ptx, true, 0).unwrap();
+        assert_eq!(body, "// .target sm_1\n.visible .entry kernel() { ret; }\n");
+        assert_eq!(max_file_index, 0);
+    }
+
+    #[test]
+    fn debug_indices_ignore_comments_paths_and_label_substrings() {
+        let ptx = ".file /* 90 */ 1 \"source12.rs\"\n.loc /* 80 */ 1 2 3, function_name $inlined_at7, inlined_at /* 70 */ 1 4 5 // inlined_at 60\n";
+        let (body, max_index) = prepare_bundle_body(ptx, false, 3).unwrap();
         assert_eq!(
-            strip_ptx_module_headers(ptx).unwrap(),
-            "// .target sm_1\n.visible .entry kernel() { ret; }\n"
+            body,
+            ".file /* 90 */ 4 \"source12.rs\"\n.loc /* 80 */ 4 2 3, function_name $inlined_at7, inlined_at /* 70 */ 4 4 5 // inlined_at 60\n"
+        );
+        assert_eq!(max_index, 4);
+    }
+
+    #[test]
+    fn malformed_debug_indices_and_overflow_return_errors() {
+        for ptx in [
+            ".file \"source12.rs\"\n",
+            ".file /* 12 */\n",
+            ".file -1 \"source.rs\"\n",
+            ".file 1foo \"source.rs\"\n",
+            ".loc 1 2 3, inlined_at\n",
+            ".loc 1 2 3, inlined_at -1 4 5\n",
+            ".file 18446744073709551616 \"source.rs\"\n",
+        ] {
+            assert!(prepare_bundle_body(ptx, false, 1).is_err(), "{ptx}");
+        }
+        assert!(
+            prepare_bundle_body(".file 18446744073709551615 \"source.rs\"\n", false, 1)
+                .unwrap_err()
+                .contains("overflow")
+        );
+    }
+
+    #[test]
+    fn merged_bundles_renumber_debug_file_indices_per_bundle() {
+        let first = ptx_bundle(
+            "first",
+            "\
+.version 8.9
+.target sm_80
+.address_size 64
+.file 1 \"a/lib.rs\"
+.file 2 \"shared/thread.rs\"
+.visible .entry a()
+{
+\t.loc\t1 10 5
+\tret;
+}
+",
+        );
+        let second = ptx_bundle(
+            "second",
+            "\
+.version 8.9
+.target sm_80
+.address_size 64
+.file 1 \"b/main.rs\"
+.visible .entry b()
+{
+\t.loc\t1 3 1, function_name $f, inlined_at 1 7 0
+\tret;
+}
+",
+        );
+        let plain = ptx_bundle(
+            "plain",
+            ".version 8.9\n.target sm_80\n.address_size 64\n.visible .entry c() { ret; }\n",
+        );
+
+        let merged = merge_ptx_bundles([&first, &plain, &second]).unwrap();
+
+        // First bundle's table and references are untouched.
+        assert!(merged.contains(".file 1 \"a/lib.rs\""));
+        assert!(merged.contains(".file 2 \"shared/thread.rs\""));
+        assert!(merged.contains(".loc\t1 10 5"));
+
+        // The debug-free middle bundle does not advance the offset; the
+        // second debug bundle continues after the first's maximum of 2 —
+        // declaration, `.loc` reference, and `inlined_at` reference alike.
+        assert!(merged.contains(".file 3 \"b/main.rs\""));
+        assert!(merged.contains(".loc\t3 3 1, function_name $f, inlined_at 3 7 0"));
+
+        // No index is declared twice across the merged module.
+        let declared: Vec<&str> = merged
+            .lines()
+            .filter(|line| line.trim_start().starts_with(".file"))
+            .map(|line| line.split_whitespace().nth(1).unwrap())
+            .collect();
+        let mut deduped = declared.clone();
+        deduped.sort_unstable();
+        deduped.dedup();
+        assert_eq!(
+            declared.len(),
+            deduped.len(),
+            "duplicate .file index: {declared:?}"
         );
     }
 
@@ -322,5 +598,14 @@ mod tests {
     #[test]
     fn target_arch_rejects_malformed_bundle_target() {
         assert!(concrete_bundle_target("sm_90x").is_err());
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[test]
+    fn bundles_of_an_executable_anchor_match_the_current_exe() {
+        static ANCHOR: u8 = 0;
+        let by_anchor = artifact_bundles_containing(&ANCHOR).unwrap();
+        let by_current_exe = artifact_bundles_from_current_exe().unwrap();
+        assert_eq!(by_anchor, by_current_exe);
     }
 }
