@@ -787,8 +787,9 @@ fn small_type_extern_module_parses_with_llvm_as() {
     std::fs::write(&ll_path, &ir).expect("write temp .ll");
     let output = std::process::Command::new(llvm_as)
         .arg("-o")
-        .arg("/dev/null")
+        .arg("-")
         .arg(&ll_path)
+        .stdout(std::process::Stdio::null())
         .output()
         .expect("run llvm-as");
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
