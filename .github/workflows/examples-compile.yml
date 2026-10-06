@@ -100,6 +100,7 @@ jobs:
           opt-22 --version | head -2
 
       - name: Compile every example (smoketest --compile-only)
+        working-directory: cuda-oxide
         # Step-level timeout, below the job's 75: a job-level timeout
         # CANCELS the job and `if: failure()` never fires, losing the
         # logs. A step timeout fails the step, so the upload still runs.
@@ -127,7 +128,9 @@ jobs:
           export LIBRARY_PATH="${sysroot}/lib:${LIBRARY_PATH:-}"
           export LD_LIBRARY_PATH="${sysroot}/lib:${LD_LIBRARY_PATH:-}"
 
-          cuda-oxide/scripts/smoketest.sh --compile-only --no-color
+          cargo build --locked -p cargo-oxide
+          export PATH="${CARGO_TARGET_DIR}/debug:${PATH}"
+          scripts/smoketest.sh --compile-only --no-color
 
       - name: Artifact modes keep shared Cargo dependencies fresh
         timeout-minutes: 10
