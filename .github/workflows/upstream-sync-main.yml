@@ -43,7 +43,7 @@ jobs:
 
           git checkout -B main origin/main
           git remote remove upstream >/dev/null 2>&1 || true
-          git remote add upstream https://github.com/NVlabs/cuda-oxide.git
+          git remote add upstream https://github.com/NVIDIA/cuda-rust.git
           git fetch --tags upstream "+refs/heads/main:refs/remotes/upstream/main"
 
           upstream_ref="refs/remotes/upstream/main"
@@ -148,7 +148,7 @@ jobs:
           {
             echo "## Upstream sync"
             echo
-            echo "- Upstream: NVlabs/cuda-oxide/main"
+            echo "- Upstream: NVIDIA/cuda-rust/main"
             echo "- Local HEAD: \`${{ steps.compare.outputs.local_head || 'unknown' }}\`"
             echo "- Upstream HEAD: \`${{ steps.compare.outputs.upstream_head || 'unknown' }}\`"
             echo "- Ahead count: ${{ steps.compare.outputs.ahead_count || 'unknown' }}"
@@ -186,7 +186,7 @@ jobs:
               marker,
               '## Upstream sync to main blocked',
               '',
-              '- Upstream: NVlabs/cuda-oxide/main',
+              '- Upstream: NVIDIA/cuda-rust/main',
               `- Local HEAD: \`${process.env.LOCAL_HEAD}\``,
               `- Upstream HEAD: \`${process.env.UPSTREAM_HEAD}\``,
               `- Current workflow HEAD: \`${process.env.CURRENT_HEAD}\``,

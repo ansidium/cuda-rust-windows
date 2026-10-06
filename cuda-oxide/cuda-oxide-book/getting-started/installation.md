@@ -297,7 +297,7 @@ cargo +stable install --locked --path crates/cargo-oxide
 **For use outside the repo** (your own projects), install it with the stable toolchain:
 
 ```bash
-cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
+cargo +stable install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend. Subsequent runs reuse the cached build.

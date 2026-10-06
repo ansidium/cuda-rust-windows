@@ -18,7 +18,7 @@ cargo +stable install --locked --path crates/cargo-oxide
 Install with the stable toolchain:
 
 ```bash
-cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
+cargo +stable install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend if it's not already available.
@@ -300,7 +300,7 @@ artifacts without recompiling unrelated host-only dependencies.
 ### `cargo oxide emit-ltoir <crate>`
 
 Compiles a crate's device code to a binary LTOIR artifact in one step, for the
-Tile-to-SIMT interop workflow ([#96](https://github.com/NVlabs/cuda-oxide/issues/96)):
+Tile-to-SIMT interop workflow ([#96](https://github.com/NVIDIA/cuda-rust/issues/96)):
 cuda-oxide is the SIMT participant, producing LTOIR that a tile or CUDA C++ kernel
 links against. It builds the crate in NVVM IR mode, then runs the emitted
 `<crate>.ll` through libNVVM `-gen-lto`, writing `<crate>.ltoir`.

@@ -29,7 +29,7 @@ nvcc -cubin -arch=sm_80 my_kernel.cu -o my_kernel.cubin
 
 ### From cuda-oxide
 
-[cuda-oxide](https://github.com/NVlabs/cuda-oxide) is an NVlabs experimental Rust-to-CUDA compiler for SIMT-style kernels. Its documented output path is PTX: build or inspect the generated PTX with `cargo oxide build` or `cargo oxide pipeline`, then load that PTX with `load_module_from_ptx` and wrap the entry function in an `AsyncKernelLaunch` or typed `DeviceOp`.
+[cuda-oxide](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-oxide) is CUDA Rust's SIMT compiler. Its documented output path is PTX: build or inspect the generated PTX with `cargo oxide build` or `cargo oxide pipeline`, then load that PTX with `load_module_from_ptx` and wrap the entry function in an `AsyncKernelLaunch` or typed `DeviceOp`.
 
 If you need a CUBIN, compile the PTX through the normal CUDA toolchain as a separate step.
 

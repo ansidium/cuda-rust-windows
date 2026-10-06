@@ -1,4 +1,4 @@
-# cuda-oxide Windows Fork Policy
+# CUDA Rust Windows Fork Policy
 
 ## Purpose
 
@@ -14,8 +14,8 @@ format and types.
 
 ## Upstream Repository
 
-- Upstream: https://github.com/NVlabs/cuda-oxide
-- Upstream branch: `NVlabs/cuda-oxide` `upstream/main`
+- Upstream: https://github.com/NVIDIA/cuda-rust
+- Upstream branch: `NVIDIA/cuda-rust` `upstream/main`
 - Upstream release baseline: CUDA-Oxide 0.2.1
 - Primary local branch: `main` Windows release fork branch tracking
   `upstream/main`
@@ -25,7 +25,7 @@ format and types.
 ## Branch Rules
 
 - `main` remains the Windows release fork branch. It tracks
-  `NVlabs/cuda-oxide` `upstream/main`.
+  `NVIDIA/cuda-rust` `upstream/main`.
 - Short-lived branches may be used for Windows enablement work, experiments,
   CI fixes, and compatibility patches.
 - Keep Windows patches narrow and reviewable. Prefer build-system, path,
@@ -41,7 +41,7 @@ format and types.
 Configure the upstream remote once:
 
 ```bash
-git remote add upstream https://github.com/NVlabs/cuda-oxide.git
+git remote add upstream https://github.com/NVIDIA/cuda-rust.git
 git remote -v
 ```
 
@@ -111,10 +111,10 @@ release-readiness gaps.
 ## Maintenance Cycle
 
 - Daily and weekly upstream monitor: `.github/workflows/upstream-monitor.yml`
-  compares this fork with `NVlabs/cuda-oxide/main` and opens or updates one
+  compares this fork with `NVIDIA/cuda-rust/main` and opens or updates one
   issue when upstream has new commits.
 - Weekly upstream sync: `.github/workflows/upstream-sync-main.yml` merges
-  `NVlabs/cuda-oxide/main` into `main`, runs `.\scripts\sync-upstream.ps1
+  `NVIDIA/cuda-rust/main` into `main`, runs `.\scripts\sync-upstream.ps1
   -RunChecks -Push`, and opens or updates one issue if the sync fails.
 - Weekly hosted Windows canary: `.github/workflows/windows.yml` runs the
   no-GPU MSVC lane on GitHub-hosted `windows-latest`.

@@ -1,6 +1,6 @@
 # Complex Multiply/Add (issue #35)
 
-Regression test for [#35](https://github.com/NVlabs/cuda-oxide/issues/35):
+Regression test for [#35](https://github.com/NVIDIA/cuda-rust/issues/35):
 device codegen rejected `z = z*z + c` on a complex-number type with
 
 ```text

@@ -499,7 +499,7 @@ define_float_atomic! {
     /// mode, so instruction choice also affects numerical behavior. This is
     /// specific to that LLVM snapshot and its options, not a guarantee for
     /// every LLVM 23 build or the separate libNVVM backend. See
-    /// <https://github.com/NVlabs/cuda-oxide/issues/1234>.
+    /// <https://github.com/NVIDIA/cuda-rust/issues/1234>.
     pub struct DeviceAtomicF32(f32);
 }
 

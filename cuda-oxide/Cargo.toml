@@ -38,7 +38,7 @@ members = [
 edition = "2024"
 authors = ["Nihal Pasham <nihalp@nvidia.com>"]
 license = "Apache-2.0"
-repository = "https://github.com/NVlabs/cuda-oxide.git"
+repository = "https://github.com/NVIDIA/cuda-rust.git"
 
 # Note: crates/rustc-codegen-cuda is NOT a workspace member because it requires
 # special rustc nightly features and a different build process.

@@ -678,8 +678,8 @@ describes only the legacy NVVM legalizer.
 
 Two rules explain that column. The first is that nothing is
 emitted whose type, address space, ordering and scope cannot be shown to
-survive: [#921](https://github.com/NVlabs/cuda-oxide/pull/921) and
-[#923](https://github.com/NVlabs/cuda-oxide/pull/923) admitted integer RMW
+survive: [#921](https://github.com/NVIDIA/cuda-rust/pull/921) and
+[#923](https://github.com/NVIDIA/cuda-rust/pull/923) admitted integer RMW
 and compare-exchange by proving those properties rather than by relaxing the
 requirement, which is why the surviving rejections are the cases where the
 proof does not hold.

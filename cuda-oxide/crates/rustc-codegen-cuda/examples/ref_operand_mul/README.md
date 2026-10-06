@@ -1,6 +1,6 @@
 # Ref-Operand Mul (issue #133)
 
-Regression test for [#133](https://github.com/NVlabs/cuda-oxide/issues/133):
+Regression test for [#133](https://github.com/NVIDIA/cuda-rust/issues/133):
 device codegen rejected `&tmp * &tmp` on a struct whose `Mul` impl lives on
 the reference type with
 

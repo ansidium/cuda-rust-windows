@@ -1,6 +1,6 @@
 # disjoint_slice_len
 
-Regression test for [issue #343](https://github.com/NVlabs/cuda-oxide/issues/343):
+Regression test for [issue #343](https://github.com/NVIDIA/cuda-rust/issues/343):
 calling `DisjointSlice::len()` inside a kernel must compile and return the launch-time length.
 
 ## The bug

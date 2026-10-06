@@ -4,7 +4,7 @@ Regression test for [issue #72]: a `#[cuda_module]` defined in a
 *library* crate must still be loadable with `kernels::load(&ctx)` from
 the application binary.
 
-[issue #72]: https://github.com/NVlabs/cuda-oxide/issues/72
+[issue #72]: https://github.com/NVIDIA/cuda-rust/issues/72
 
 ## Structure
 

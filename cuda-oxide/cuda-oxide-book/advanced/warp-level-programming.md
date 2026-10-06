@@ -163,7 +163,7 @@ Three constraints:
 `warp_reduce` does not select this form for you today; making it do so
 automatically needs a way for device code to know its target architecture,
 which is the open question in
-[#811](https://github.com/NVlabs/cuda-oxide/issues/811).
+[#811](https://github.com/NVIDIA/cuda-rust/issues/811).
 
 ### Floats on Blackwell: `redux.sync` for `f32`
 

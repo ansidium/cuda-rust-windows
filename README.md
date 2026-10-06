@@ -1,20 +1,25 @@
 <p align="center">
-  <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/clippy.yml"><img alt="clippy" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/clippy.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/unit-tests.yml"><img alt="unit-tests" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/unit-tests.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/cargo-deny.yml"><img alt="cargo-deny" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/cargo-deny.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/codeql.yml/badge.svg?branch=main"></a>
-  <a href="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml"><img alt="windows" src="https://github.com/ansidium/cuda-oxide-windows/actions/workflows/windows.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/ansidium/cuda-rust-windows/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/ansidium/cuda-rust-windows/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/ansidium/cuda-rust-windows/actions/workflows/cutile-rs.yml"><img alt="cuTile" src="https://github.com/ansidium/cuda-rust-windows/actions/workflows/cutile-rs.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/ansidium/cuda-rust-windows/actions/workflows/examples-compile.yml"><img alt="examples" src="https://github.com/ansidium/cuda-rust-windows/actions/workflows/examples-compile.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/ansidium/cuda-rust-windows/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/ansidium/cuda-rust-windows/actions/workflows/codeql.yml/badge.svg?branch=main"></a>
+  <a href="https://github.com/ansidium/cuda-rust-windows/actions/workflows/windows.yml"><img alt="windows" src="https://github.com/ansidium/cuda-rust-windows/actions/workflows/windows.yml/badge.svg?branch=main"></a>
   <br>
   <br>
-  <img src="cuda-oxide/assets/windows-banner-dark-cropped.png" alt="cuda-oxide: pure Rust CUDA (SIMT) kernels with Windows support" width="720">
+  <img src="cuda-oxide/assets/windows-banner-dark-cropped.png" alt="CUDA Rust Windows: native Rust CUDA kernels" width="720">
 </p>
 
-> Windows-support fork of [NVlabs/cuda-oxide](https://github.com/NVlabs/cuda-oxide), maintained by [ansidium](https://github.com/ansidium).
+# CUDA Rust Windows
+
+> Windows-support fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust), maintained by [ansidium](https://github.com/ansidium).
 
 | Platform | Integration | Documentation |
 |----------|-------------|---------------|
 | Linux | Upstream-compatible | [Fork differences](FORK.md) |
 | Windows 10/11 x64 | Native MSVC (`x86_64-pc-windows-msvc`) | [Windows setup](cuda-oxide/cuda-oxide-book/getting-started/windows.md) |
+
+This repository contains cuda-oxide (SIMT), [cuTile Rust](cutile-rs/README.md),
+and their shared CUDA host crates.
 
 cuda-oxide is a custom rustc backend for compiling GPU kernels in pure Rust.
 The workspace combines:
@@ -179,7 +184,7 @@ To use the published repository version from another project, install it from
 Git instead:
 
 ```bash
-cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
+cargo +stable install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend.
@@ -375,7 +380,7 @@ cargo oxide run gemm_sol_final
 - LTOIR generation for Blackwell+ (device-side LTO)
 - Device FFI: Rust <-> C++/CCCL interop via LTOIR
 - MathDx integration: cuFFTDx thread-level FFT, cuBLASDx block-level GEMM
-- Tile interop: [`cutile_inter_kernel`](cuda-oxide/crates/rustc-codegen-cuda/examples/cutile_inter_kernel/README.md) chains a cutile-rs Tile kernel and a cuda-oxide SIMT PTX kernel on the same CUDA stream over shared device tensors. Intra-kernel Tile interop is work in progress and tracked in [#96](https://github.com/NVlabs/cuda-oxide/issues/96).
+- Tile interop: [`cutile_inter_kernel`](cuda-oxide/crates/rustc-codegen-cuda/examples/cutile_inter_kernel/README.md) chains a cutile-rs Tile kernel and a cuda-oxide SIMT PTX kernel on the same CUDA stream over shared device tensors. Intra-kernel Tile interop is work in progress and tracked in [#96](https://github.com/NVIDIA/cuda-rust/issues/96).
 - Host runtime: `cuda-core` (explicit control, pinned host transfers) and `cuda-async` (composable async operations)
 - Canonical Blackwell GEMM SoL example with size-specialized M256xN256/M512xN256 CLC + cta_group::2 kernels and vectorized epilogues (see `gemm_sol_final`)
 

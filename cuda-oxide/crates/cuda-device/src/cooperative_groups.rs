@@ -1062,7 +1062,7 @@ impl WarpShuffle for f32 {
 /// This function does not select that form for you: `redux.sync` will not
 /// assemble below `sm_80`, and device code has no way to ask what target it is
 /// being compiled for (see
-/// [#811](https://github.com/NVlabs/cuda-oxide/issues/811)). Call it directly
+/// [#811](https://github.com/NVIDIA/cuda-rust/issues/811)). Call it directly
 /// when you know the target is Ampere+, gating on
 /// `CudaContext::compute_capability` as the `redux_sum` example does. Floats
 /// keep this butterfly — there is no `f32` `redux` before `sm_100`.

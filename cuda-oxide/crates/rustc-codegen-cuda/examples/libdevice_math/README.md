@@ -46,5 +46,5 @@ CUDA_TOOLKIT_PATH=/usr/local/cuda-13.0 \
 ```
 
 This example keeps regression coverage for
-[issue #98](https://github.com/NVlabs/cuda-oxide/issues/98) and the related
+[issue #98](https://github.com/NVIDIA/cuda-rust/issues/98) and the related
 community reports.

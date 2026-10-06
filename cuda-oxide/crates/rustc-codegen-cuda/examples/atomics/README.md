@@ -97,7 +97,7 @@ This is a property of that LLVM snapshot and its options, not every LLVM 23
 build or the separate libNVVM backend. Native global `atom.add.f32` flushes
 subnormal inputs and results to zero; the loop preserves them under the default
 floating-point mode. Switching instructions therefore changes numerical
-behavior, not just performance. See [#1234](https://github.com/NVlabs/cuda-oxide/issues/1234)
+behavior, not just performance. See [#1234](https://github.com/NVIDIA/cuda-rust/issues/1234)
 for the investigation.
 
 This fork uses stable Rust, which may bundle a different LLVM version. Check

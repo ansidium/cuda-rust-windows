@@ -1,6 +1,6 @@
 # Windows Setup
 
-The Windows fork targets `x86_64-pc-windows-msvc` and tracks NVlabs/cuda-oxide.
+The Windows fork targets `x86_64-pc-windows-msvc` and tracks NVIDIA/cuda-rust.
 
 ## Support Matrix
 

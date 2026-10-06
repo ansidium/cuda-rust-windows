@@ -14,7 +14,8 @@
 //! kernels differently, or not at all, with no error pointing at the cause.
 //!
 //! So the backend is built from the checkout Cargo already made for the
-//! dependency instead of from a separately cloned `main`:
+//! dependency instead of from a separately cloned `main`. For a historical
+//! flat cuda-oxide checkout, this looks like:
 //!
 //! ```text
 //! Cargo.lock   cuda-device = git+https://github.com/NVlabs/cuda-oxide.git#<sha>
@@ -316,6 +317,7 @@ mod tests {
     use serde_json::json;
     use std::time::SystemTime;
 
+    // Keep the historical URL to cover existing lockfiles after repository renames.
     const REPO: &str = "https://github.com/NVlabs/cuda-oxide.git";
     const SHA: &str = "a1b4f11882592fae9d022c86a9d8d1a4c9426980";
 

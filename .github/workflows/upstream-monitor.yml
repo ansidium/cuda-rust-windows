@@ -12,7 +12,7 @@ on:
       upstream_repository:
         description: "Repository to monitor"
         required: false
-        default: "NVlabs/cuda-oxide"
+        default: "NVIDIA/cuda-rust"
         type: string
       upstream_branch:
         description: "Branch to compare against"
@@ -54,7 +54,7 @@ jobs:
         id: compare
         shell: bash
         env:
-          INPUT_UPSTREAM_REPOSITORY: ${{ inputs.upstream_repository || 'NVlabs/cuda-oxide' }}
+          INPUT_UPSTREAM_REPOSITORY: ${{ inputs.upstream_repository || 'NVIDIA/cuda-rust' }}
           INPUT_UPSTREAM_BRANCH: ${{ inputs.upstream_branch || 'main' }}
           INPUT_MAX_COMMITS: ${{ inputs.max_commits || '30' }}
         run: |

@@ -25,8 +25,8 @@ The commands below are for Linux. For Windows, see
 ## Clone the repository
 
 ```bash
-git clone https://github.com/ansidium/cuda-oxide-windows.git
-cd cuda-oxide-windows
+git clone https://github.com/ansidium/cuda-rust-windows.git
+cd cuda-rust-windows
 ```
 
 ## Install the Rust toolchain
@@ -165,7 +165,7 @@ cargo +stable install --locked --path crates/cargo-oxide
 For standalone use, install it from Git with the stable toolchain:
 
 ```bash
-cargo +stable install --locked --git https://github.com/ansidium/cuda-oxide-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
+cargo +stable install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev 53adc37eb7af836ff014c1204f0d9327dbeb1330 cargo-oxide
 ```
 
 On first run, `cargo-oxide` automatically fetches and builds the codegen backend

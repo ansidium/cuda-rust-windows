@@ -42,4 +42,4 @@ automatically from this archive layout.
 The archive does not include CUDA Toolkit DLLs, rustup toolchain DLLs, LLVM, or
 MSVC runtime redistributables. Install those through their normal installers.
 
-Windows builds are maintained by [ansidium](https://github.com/ansidium/cuda-oxide-windows).
+Windows builds are maintained by [ansidium](https://github.com/ansidium/cuda-rust-windows).

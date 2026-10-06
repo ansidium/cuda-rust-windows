@@ -231,7 +231,7 @@ cuda-bindings          NVIDIA CUDA bindings
 - [mistral.rs](https://github.com/EricLBuehler/mistral.rs): Rust LLM inference engine with [cuTile Rust kernels](https://github.com/EricLBuehler/mistral.rs/tree/master/mistralrs-quant/src/cutile) for quantized linear layers and MoE, enabled by the optional `cutile` feature.
 - [cuTile Python](https://github.com/nvidia/cutile-python): Python kernel programming with CUDA Tile.
 - [TileGym](https://github.com/NVIDIA/TileGym): CUDA Tile kernel examples and tuning patterns, including a set of ready-to-use cuTile Rust kernels under [`ops/cutile_rs`](https://github.com/NVIDIA/TileGym/tree/main/src/tilegym/ops/cutile_rs).
-- [cuda-oxide](https://github.com/NVlabs/cuda-oxide): NVlabs experimental Rust-to-CUDA compiler for writing SIMT-style GPU kernels in Rust.
+- [cuda-oxide](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-oxide): CUDA Rust's SIMT compiler for GPU kernels written in Rust.
 - [CUDA Tile IR documentation](https://docs.nvidia.com/cuda/tile-ir/latest/index.html): CUDA Tile IR reference documentation.
 - [CUDA documentation](https://docs.nvidia.com/cuda/): CUDA toolkit documentation.
 - [Rust NVPTX backend](https://doc.rust-lang.org/rustc/platform-support/nvptx64-nvidia-cuda.html): rustc's target support for generating PTX for NVIDIA GPUs.

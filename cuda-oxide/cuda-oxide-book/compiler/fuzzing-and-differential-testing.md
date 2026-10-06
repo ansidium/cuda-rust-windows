@@ -250,9 +250,9 @@ That is why many early seeds classify as `UNSUPPORTED [adapter]`.
 
 The widening plan is incremental, and two steps have already landed: the
 adapter now accepts every scalar the trace API can hash (f32 and f64 arrived
-last, in [#484](https://github.com/NVlabs/cuda-oxide/pull/484)), plus arrays
+last, in [#484](https://github.com/NVIDIA/cuda-rust/pull/484)), plus arrays
 and tuples built from them
-([#792](https://github.com/NVlabs/cuda-oxide/pull/792)). What remains:
+([#792](https://github.com/NVIDIA/cuda-rust/pull/792)). What remains:
 
 1. Decide whether and how to support `char` in cuda-oxide's type translation.
 2. Expand control-flow and cast coverage.
