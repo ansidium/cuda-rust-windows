@@ -6,9 +6,11 @@ This fork adds native Windows support for `x86_64-pc-windows-msvc` while
 keeping Linux behavior upstream-compatible. Windows changes cover build
 tools, library discovery, CI, smoke tests, and platform compatibility fixes.
 
-The shared host runtime is pinned to `ansidium/cutile-rs` for MSVC enum ABI
-fixes. The isolated backend uses the in-tree COFF artifact writer; host
-crates use the published artifact format and types.
+The shared host runtime lives at the repository root. SIMT examples use
+those crates through path dependencies; generated standalone projects pin
+the runtime and compiler to one fork revision. The isolated backend uses
+the in-tree COFF artifact writer; host crates use the published artifact
+format and types.
 
 ## Upstream Repository
 
@@ -76,19 +78,7 @@ Conflict policy:
 - Update this file only when the resolved result intentionally diverges from
   upstream behavior.
 
-No-GPU sync checks after merge:
-
-```powershell
-cargo fmt --all --check
-cargo test -p cargo-oxide
-cargo test -p cuda-toolkit-discovery -p libnvvm-sys -p nvjitlink-sys
-cargo test -p cuda-host --features async
-cargo test --manifest-path crates/oxide-artifacts/Cargo.toml --features object
-cargo clippy --workspace -- -D warnings
-cargo doc --no-deps --workspace
-```
-
-Run the canonical no-GPU sequence with:
+Run the canonical no-GPU checks from the repository root:
 
 ```powershell
 .\scripts\sync-upstream.ps1 -RunChecks
@@ -110,7 +100,7 @@ On a Windows GPU host, also run the full Windows smoke path:
 cargo oxide doctor
 cargo oxide build vecadd
 cargo oxide run vecadd
-.\scripts\smoketest.ps1
+.\cuda-oxide\scripts\smoketest.ps1
 ```
 
 When a sync changes Windows readiness, update

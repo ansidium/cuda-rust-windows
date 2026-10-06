@@ -1,0 +1,25 @@
+[package]
+name = "math_no_mir_inline"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+
+[package.metadata.cuda-oxide]
+extra-rustflags = ["-Zinline-mir=no"]
+
+# Standalone crate (not part of parent workspace).
+[workspace]
+
+[dependencies]
+cuda-device = { path = "../../../cuda-device" }
+cuda-host = { path = "../../../cuda-host" }
+cuda-core = { path = "../../../../../cuda-core", version = "0.4.0" }
+
+# `x.atan()` and every other float method is a one-line `#[inline]` wrapper in
+# `std`. At default release settings rustc's MIR inliner folds that wrapper
+# into the kernel, so the collector only ever sees the function underneath it
+# and this example would test nothing. Switching MIR inlining off keeps the
+# wrapper call in the kernel, which is what every `-C incremental` build
+# (cargo's dev profile, `cargo oxide test`, `CARGO_INCREMENTAL=1`) does by
+# itself. cargo-oxide applies the package metadata only to this example's
+# codegen invocation, leaving the shared dependency tree unchanged.

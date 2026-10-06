@@ -1,0 +1,22 @@
+[package]
+name = "reborrow"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+
+[package.metadata.cuda-oxide]
+extra-rustflags = ["-Zmir-opt-level=0"]
+
+[workspace]
+
+[dependencies]
+cuda-device = { path = "../../../cuda-device" }
+cuda-host = { path = "../../../cuda-host" }
+cuda-core = { path = "../../../../../cuda-core", version = "0.4.0" }
+
+# The importer's `Rvalue::Reborrow` arm has a `Mutability::Mut` half that only
+# exists in unoptimized MIR: GVN folds a mutable reborrow into a plain copy at
+# mir-opt-level>0. Scoping level 0 to this one crate keeps that half reachable
+# in cargo-oxide builds, without borrowing the device debug mode for it.
+# cargo-oxide applies the package metadata only to this example's codegen
+# invocation, leaving the shared dependency tree unchanged.

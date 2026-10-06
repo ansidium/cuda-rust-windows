@@ -107,7 +107,7 @@ jobs:
         if: steps.compare.outputs.behind_count != '0'
         continue-on-error: true
         shell: pwsh
-        run: .\scripts\sync-upstream.ps1 -RunChecks -Push
+        run: .\cuda-oxide\scripts\sync-upstream.ps1 -RunChecks -Push
 
       - name: Collect final state
         id: final

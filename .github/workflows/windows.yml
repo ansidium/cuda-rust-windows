@@ -29,6 +29,11 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    working-directory: cuda-oxide
+    shell: pwsh
+
 jobs:
   windows-msvc-no-gpu:
     name: windows-latest MSVC no-GPU canary
@@ -61,6 +66,9 @@ jobs:
           "LIB=$cudaPath\lib\x64;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Append
           "INCLUDE=$cudaPath\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Append
           "$cudaPath\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          if (Test-Path "$cudaPath\bin\x64") {
+            "$cudaPath\bin\x64" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
 
           $llvmBin = "C:\Program Files\LLVM\bin"
           if (Test-Path $llvmBin) {
@@ -70,7 +78,7 @@ jobs:
 
       - name: Install libffi
         shell: pwsh
-        run: .\.github\scripts\install-libffi.ps1
+        run: ..\.github\scripts\install-libffi.ps1
 
       - name: Test generator path provenance
         run: cargo test --locked -p cuda-intrinsics-gen overlay_hash_uses_repository_relative_paths
@@ -129,6 +137,9 @@ jobs:
           "LIB=$cudaPath\lib\x64;$env:LIB" | Out-File -FilePath $env:GITHUB_ENV -Append
           "INCLUDE=$cudaPath\include;$env:INCLUDE" | Out-File -FilePath $env:GITHUB_ENV -Append
           "$cudaPath\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          if (Test-Path "$cudaPath\bin\x64") {
+            "$cudaPath\bin\x64" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
 
           $llvmBin = "C:\Program Files\LLVM\bin"
           if (Test-Path $llvmBin) {
@@ -138,7 +149,7 @@ jobs:
 
       - name: Install libffi
         shell: pwsh
-        run: .\.github\scripts\install-libffi.ps1
+        run: ..\.github\scripts\install-libffi.ps1
 
       - name: Test CUDA discovery and runtime loading
         shell: pwsh

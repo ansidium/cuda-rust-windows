@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Included the shared host crates and cuTile import from upstream; the SIMT
+  workspace now lives under `cuda-oxide/`.
+- Adapted the MIR importer and codegen backend to stable Rust 1.99.
+- Preserved the native Windows CUDA enum ABI in the shared runtime.
+- Updated Windows CI, setup paths, and release packaging for the new layout.
+
 - Switched the workspace, devcontainer, CLI scaffold, CI, and documentation
   from a dated nightly pin to the latest stable Rust channel.
 - Adapted the MIR importer and private codegen-backend API to stable Rust 1.97.
