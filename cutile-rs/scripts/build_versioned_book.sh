@@ -13,7 +13,7 @@ OUT_DIR="${CUTILE_DOCS_SITE_DIR:-$REPO_ROOT/_site}"
 MAIN_REF="${CUTILE_DOCS_MAIN_REF:-HEAD}"
 MAIN_VERSION="${CUTILE_DOCS_MAIN_VERSION:-main}"
 TAG_PATTERN="${CUTILE_DOCS_TAG_PATTERN:-cutile-rs/v*}"
-BASE_URL="${CUTILE_DOCS_BASE_URL:-/cuda-oxide/cutile-rs/}"
+BASE_URL="${CUTILE_DOCS_BASE_URL:-/cuda-rust-windows/cutile-rs/}"
 
 if [[ "$BASE_URL" != /* ]]; then
     BASE_URL="/$BASE_URL"

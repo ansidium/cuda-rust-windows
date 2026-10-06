@@ -84,12 +84,12 @@ jobs:
 
       # GitHub Pages allows one artifact per repository. Nest the former
       # cutile-rs Pages site under /cutile-rs/ so both books share one deploy.
-      # Project Pages live at /cuda-oxide/, so the Sphinx base URL includes
-      # that prefix. On PRs skip historical tags to keep the check fast.
+      # Project Pages use the repository name as their URL prefix.
+      # On PRs skip historical tags to keep the check fast.
       - name: Build cutile-rs versioned book
         env:
           CUTILE_DOCS_SITE_DIR: ${{ github.workspace }}/_site/cutile-rs
-          CUTILE_DOCS_BASE_URL: /cuda-oxide/cutile-rs/
+          CUTILE_DOCS_BASE_URL: /${{ github.event.repository.name }}/cutile-rs/
           CUTILE_DOCS_MAIN_REF: HEAD
           CUTILE_DOCS_TAG_PATTERN: "cutile-rs/v*"
         run: |
