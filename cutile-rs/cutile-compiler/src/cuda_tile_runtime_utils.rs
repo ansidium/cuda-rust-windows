@@ -1192,12 +1192,17 @@ fn shell_display(value: &std::ffi::OsStr) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use cutile_ir::builder::{append_op, build_single_block_region, OpBuilder};
+    #[cfg(unix)]
     use cutile_ir::bytecode::Opcode;
+    #[cfg(unix)]
     use cutile_ir::ir::{Attribute, FuncType, Location, Module, Type};
     use std::fs;
+    #[cfg(unix)]
     use std::sync::Mutex;
 
+    #[cfg(unix)]
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     /// A toolkit older than the Tile floor is an `Err` from the `Result`
@@ -1300,7 +1305,11 @@ mod tests {
     fn tileiras_binary_defaults_to_path_lookup() {
         assert_eq!(
             resolve_tileiras_binary_with_candidates(None, None, &[]),
-            PathBuf::from("tileiras")
+            PathBuf::from(if cfg!(windows) {
+                "tileiras.exe"
+            } else {
+                "tileiras"
+            })
         );
     }
 
@@ -1320,7 +1329,11 @@ mod tests {
     fn tileiras_binary_treats_empty_override_as_default() {
         assert_eq!(
             resolve_tileiras_binary_with_candidates(Some(OsString::new()), None, &[]),
-            PathBuf::from("tileiras")
+            PathBuf::from(if cfg!(windows) {
+                "tileiras.exe"
+            } else {
+                "tileiras"
+            })
         );
     }
 
@@ -1716,11 +1729,13 @@ mod tests {
         let _ = fs::remove_dir_all(&temp_dir);
     }
 
+    #[cfg(unix)]
     struct EnvVarGuard {
         key: &'static str,
         previous: Option<OsString>,
     }
 
+    #[cfg(unix)]
     impl EnvVarGuard {
         fn set(key: &'static str, value: &std::path::Path) -> Self {
             let previous = env::var_os(key);
@@ -1735,6 +1750,7 @@ mod tests {
         }
     }
 
+    #[cfg(unix)]
     impl Drop for EnvVarGuard {
         fn drop(&mut self) {
             match &self.previous {
@@ -1744,6 +1760,7 @@ mod tests {
         }
     }
 
+    #[cfg(unix)]
     fn empty_kernel_module() -> Module {
         let mut module = Module::new("tileiras_override_test");
         let func_type = Type::Func(FuncType {

@@ -9,10 +9,8 @@
 name: cutile-rs-pr
 
 on:
-  # Self-hosted runners (linux-amd64-cpu16) cannot run on pull_request events —
-  # see https://docs.gha-runners.nvidia.com/pull-request-testing/. Instead,
-  # copy-pr-bot mirrors trusted PRs to pull-request/<n> and we trigger on that
-  # push (config: .github/copy-pr-bot.yaml).
+  # Run on main and upstream-style trusted PR mirrors. This fork uses
+  # GitHub-hosted runners rather than NVIDIA's internal runner pool.
   #
   # No workflow-level paths: filter. copy-pr-bot creates pull-request/<n> at an
   # existing SHA, and GitHub often treats that push as having no path changes,
@@ -74,7 +72,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.2.0-devel-ubuntu24.04
       env:
@@ -104,7 +102,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.4.1-devel-ubuntu24.04
       env:
@@ -129,7 +127,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.3.0-devel-ubuntu24.04
       env:
@@ -185,7 +183,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.3.0-devel-ubuntu24.04
       env:
@@ -224,7 +222,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.0.0-devel-ubuntu24.04
       env:
@@ -254,7 +252,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu16
+    runs-on: ubuntu-latest
     container:
       image: nvidia/cuda:13.3.0-devel-ubuntu24.04
       # ThreadSanitizer must disable ASLR; the default container seccomp blocks

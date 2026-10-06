@@ -44,7 +44,7 @@ runs:
 
     # Stay in cutile-rs. rustup walks up from the working directory, and the
     # git-root pin is the host-crate stable toolchain, not this file. The Oxide
-    # nightly lives in cuda-oxide/rust-toolchain.toml.
+    # toolchain lives in cuda-oxide/rust-toolchain.toml.
     - name: Install Rust
       shell: bash
       working-directory: cutile-rs

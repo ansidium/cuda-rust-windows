@@ -99,7 +99,8 @@ fn helper_instructions_keep_exact_lines_and_call_sites() {
                             if let DebugScope::Subprogram(scope) = &info.scope {
                                 if scope.name == name && info.line == expected_line {
                                     assert!(
-                                        info.filename.ends_with("fixtures/debug_helpers.rs"),
+                                        std::path::Path::new(&info.filename)
+                                            .ends_with("fixtures/debug_helpers.rs"),
                                         "{info:?}"
                                     );
                                     assert!(!matches!(&**caller, Location::Unknown));

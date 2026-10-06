@@ -148,8 +148,8 @@ if total_parsed < 10 * len(locks):
              % (total_parsed, len(locks)))
 
 for manifest in sorted(groups.values()):
-    print(manifest)
-' "${EXAMPLES_ROOT}" "${POLICY_EXEMPT_EXAMPLES[@]}")"
+    print(manifest.replace(os.sep, "/"))
+' "${EXAMPLES_ROOT}" "${POLICY_EXEMPT_EXAMPLES[@]}" | tr -d '\r')"
 
 total="$(printf '%s\n' "${representatives}" | grep -c .)"
 locks="$(find "${EXAMPLES_ROOT}" -name Cargo.lock | grep -c .)"

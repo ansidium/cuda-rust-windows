@@ -385,6 +385,7 @@ fn emit_setup_diagnostic(args: std::fmt::Arguments<'_>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use std::fs;
 
     #[test]

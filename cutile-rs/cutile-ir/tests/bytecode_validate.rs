@@ -117,7 +117,7 @@ fn run_tileiras(bc: &[u8], name: &str) {
         .arg("--gpu-name")
         .arg("sm_120")
         .arg("-o")
-        .arg("/dev/null")
+        .arg(if cfg!(windows) { "NUL" } else { "/dev/null" })
         .arg(tmp.to_str().unwrap())
         .output()
     {
