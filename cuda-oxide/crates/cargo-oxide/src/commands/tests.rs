@@ -146,17 +146,28 @@ fn unique_temp_dir(prefix: &str) -> PathBuf {
 
 #[cfg(unix)]
 fn doctor_clang_fixture(root: &Path, name: &str, resource_response: &str) -> String {
-    use std::os::unix::fs::PermissionsExt;
+    use std::io::Write;
+    use std::process::Stdio;
 
     let path = root.join(name);
-    fs::write(
-        &path,
-        format!(
+    // A concurrent fork can inherit a writable executable fd until exec,
+    // causing ETXTBSY even after fs::write returns. Write in a separate
+    // process and wait for it to exit before probing the fixture.
+    let mut writer = Command::new("sh")
+        .args(["-c", "cat > \"$1\" && chmod 755 \"$1\"", "write-fake-clang"])
+        .arg(&path)
+        .stdin(Stdio::piped())
+        .spawn()
+        .unwrap();
+    writer
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(format!(
             "#!/bin/sh\ncase \"$1\" in\n--version) echo clang; exit 0;;\n-print-resource-dir) {resource_response};;\nesac\nexit 1\n"
-        ),
-    )
-    .unwrap();
-    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        ).as_bytes())
+        .unwrap();
+    assert!(writer.wait().unwrap().success());
     path.to_string_lossy().into_owned()
 }
 
