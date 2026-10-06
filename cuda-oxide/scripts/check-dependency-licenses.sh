@@ -104,7 +104,7 @@ print("\n".join(sorted(names)))
 # second half covers. Today that is four, and how each got here matters:
 #
 #   1. Cargo.toml -- the stable shared-host workspace.
-#   2. cuda-oxide/Cargo.toml -- the nightly SIMT workspace.
+#   2. cuda-oxide/Cargo.toml -- the stable SIMT workspace.
 #   3. cuda-oxide/crates/rustc-codegen-cuda/Cargo.toml -- its own `[workspace]` for the
 #      rustc-private dylibs, so `-p` from the root cannot reach it and the root
 #      `cargo metadata` stops at that boundary.  That is how the backend crate
@@ -119,7 +119,7 @@ print("\n".join(sorted(names)))
 #      member `device-only-kernels` had no row.  #1043 closed the identical gap
 #      for `cargo deny check` -- which judges the license *policy* -- and this
 #      guard covers the other half, that the human-readable inventory does not
-#      fall behind what a workspace declares.  Both halves need all three roots.
+#      fall behind what a workspace declares. Both halves need all named roots.
 FIRST_PARTY_WORKSPACE_ROOTS=(
     Cargo.toml
     cuda-oxide/Cargo.toml
@@ -148,8 +148,8 @@ workspace_roots() {
             manifest_dir="$(dirname "${manifest}")"
             manifest_name="$(basename "${manifest}")"
             # rustup selects a toolchain from the working directory, not from
-            # --manifest-path. Run beside each manifest so CUDA Oxide examples
-            # with nightly-only Cargo features use the component pin.
+            # --manifest-path. Run beside each manifest so component-specific
+            # toolchain requirements use the correct pin.
             workspace_root="$(
                 cd "${manifest_dir}"
                 cargo locate-project --workspace --message-format plain --frozen \
@@ -287,8 +287,8 @@ echo "OK: ${CSV} records all $(printf '%s\n' "${required}" | grep -c .) declared
 # [workspace], so neither `cargo deny check` nor the check above resolves any
 # of them -- both stop at the SIMT workspace boundary. Most examples declare
 # only path dependencies on first-party crates and so bring nothing new, but a
-# few link third-party code (tokio, rayon, libm, the shared cutile-rs crates),
-# and that code is compiled by `cargo oxide run <example>` and by
+# few link third-party code (tokio, rayon, libm), and that code is compiled
+# by `cargo oxide run <example>` and by
 # scripts/smoketest.sh without any license gate seeing it.
 #
 # Presence only, as above.  Lock files are parsed directly rather than through
@@ -301,8 +301,8 @@ echo "OK: ${CSV} records all $(printf '%s\n' "${required}" | grep -c .) declared
 # A package counts as covered when it is in the root graph, has a CSV row, or
 # carries no `source` field.  That last case is a path dependency, which is
 # first-party by construction.  Name matching is deliberately avoided -- some
-# first-party crates are pulled from crates.io rather than by path (cuda-core
-# and friends from cutile-rs), so a heuristic over names would misfile them.
+# first-party crates can be pulled from crates.io rather than by path, so a
+# heuristic over names would misfile them.
 # Examples whose third-party dependencies are deliberately out of inventory
 # scope.  cutile_inter_kernel pulls the cutile compiler stack from cutile-rs,
 # which resolves a further ~60 crates (wasm-bindgen, wit-bindgen, wasmparser,

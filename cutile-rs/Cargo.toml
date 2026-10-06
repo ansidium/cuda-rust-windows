@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-    # Host CUDA crates live at the git root (Oxide workspace members).
+    # Host CUDA crates live in the root workspace.
     # This workspace path-depends on them; they cannot be members here.
 
     # cuTile Rust compiler. Requires cutile-ir + cuda-async.
@@ -45,7 +45,7 @@ edition = "2021"
 rust-version = "1.89"
 license = "Apache-2.0"
 authors = ["Melih Elibol"]
-repository = "https://github.com/nvlabs/cutile-rs"
+repository = "https://github.com/NVIDIA/cuda-rust.git"
 
 [workspace.dependencies]
 # ── Third-party ──────────────────────────────────────────────────────────────

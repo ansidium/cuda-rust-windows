@@ -6,13 +6,11 @@ edition = "2021"
 rust-version = "1.89"
 license = "Apache-2.0"
 authors = ["Melih Elibol"]
-repository = "https://github.com/nvlabs/cutile-rs"
+repository = "https://github.com/NVIDIA/cuda-rust.git"
 readme = "README.md"
 
 [dependencies]
-# Sibling paths, not the root workspace entries: those name the published
-# release that cuda-oxide consumes, and inheriting them here would make this
-# copy depend on a crates.io cuda-bindings instead of the one beside it.
+# Sibling paths keep these dependencies in the shared host workspace.
 cuda-bindings = { version = "=0.4.0", path = "../cuda-bindings" }
 cuda-core-derive = { version = "=0.4.0", path = "../cuda-core-derive" }
 anyhow = "1"

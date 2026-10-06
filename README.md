@@ -11,7 +11,7 @@
 
 # CUDA Rust Windows
 
-> Windows-support fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust), maintained by [ansidium](https://github.com/ansidium).
+> Windows-support fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust).
 
 | Platform | Integration | Documentation |
 |----------|-------------|---------------|
@@ -386,13 +386,13 @@ cargo oxide run gemm_sol_final
 
 ## Documentation
 
-**WIP:** 🚧 The **[cuda-oxide book](https://nvlabs.github.io/cuda-oxide/)** is the primary reference for the project. It covers SIMT kernel authoring in Rust, synchronous and asynchronous GPU programming, the compiler architecture, and more.
+**WIP:** 🚧 The **[cuda-oxide book](https://nvidia.github.io/cuda-rust/)** is the primary reference for the project. It covers SIMT kernel authoring in Rust, synchronous and asynchronous GPU programming, the compiler architecture, and more.
 
 To build and serve the book locally, see [cuda-oxide/cuda-oxide-book/README.md](cuda-oxide/cuda-oxide-book/README.md).
 
 ## Ecosystem
 
-cuda-oxide is one of several Rust + GPU efforts under active development. Projects in this space address different parts of the problem — Vulkan/SPIR-V for graphics, implicit offload via LLVM, third-party CUDA backends, safe driver bindings — and we've been working with maintainers across the broader Rust GPU community on how to move GPU computing in Rust forward together. For where cuda-oxide fits relative to other projects, see the [Ecosystem appendix](https://nvlabs.github.io/cuda-oxide/appendix/ecosystem.html) of the book.
+cuda-oxide is one of several Rust + GPU efforts under active development. Projects in this space address different parts of the problem — Vulkan/SPIR-V for graphics, implicit offload via LLVM, third-party CUDA backends, safe driver bindings — and we've been working with maintainers across the broader Rust GPU community on how to move GPU computing in Rust forward together. For where cuda-oxide fits relative to other projects, see the [Ecosystem appendix](https://nvidia.github.io/cuda-rust/appendix/ecosystem.html) of the book.
 
 ## License
 

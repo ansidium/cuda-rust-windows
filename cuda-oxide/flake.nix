@@ -76,7 +76,7 @@
             cuda_cccl
             libnvvm
             libnvjitlink.lib
-            # cuRAND headers: the shared cuda-bindings crate (cutile-rs) runs
+            # cuRAND headers: the shared cuda-bindings crate at the root runs
             # bindgen over cuda.h and curand.h, so curand.h is a build input.
             libcurand.include
             # cuBLAS (incl. cuBLASLt) for the gemm_sol/bench/cublaslt_bench.c

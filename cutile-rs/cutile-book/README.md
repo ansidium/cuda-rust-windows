@@ -23,19 +23,19 @@ make livehtml
 or, from the repository root:
 
 ```
-scripts/run_book.sh serve
+cutile-rs/scripts/run_book.sh serve
 ```
 
 GitHub Pages uses the versioned site build instead. To run the same build entry
 point locally, run from the repository root:
 
 ```
-scripts/build_versioned_book.sh
+cutile-rs/scripts/build_versioned_book.sh
 ```
 
-The generated GitHub Pages site is written to `_site/`.
+The generated site is written to `cutile-rs/_site/` by default.
 
 ## Related Documentation
 
-- **API Docs**: Run `cargo doc --open` from the project root
-- **Examples**: See the `cutile-examples/` directory
+- **API Docs**: Run `cargo doc --open` from `cutile-rs/`
+- **Examples**: See the `cutile-rs/cutile-examples/` directory

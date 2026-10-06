@@ -5,8 +5,8 @@
 <img src="assets/logo.svg" alt="cuTile Rust" width="380">
 
 [![Crates.io](https://badgen.net/crates/v/cutile)](https://crates.io/crates/cutile)
-[![Build](https://img.shields.io/github/actions/workflow/status/NVlabs/cutile-rs/pr.yml?branch=main&event=push&label=build)](https://github.com/NVlabs/cutile-rs/actions/workflows/pr.yml)
-[![Docs](https://img.shields.io/badge/docs-book-blue.svg)](https://nvlabs.github.io/cutile-rs/)
+[![Build](https://github.com/ansidium/cuda-rust-windows/actions/workflows/cutile-rs.yml/badge.svg?branch=main)](https://github.com/ansidium/cuda-rust-windows/actions/workflows/cutile-rs.yml)
+[![Docs](https://img.shields.io/badge/docs-book-blue.svg)](https://nvidia.github.io/cuda-rust/cutile-rs/)
 
 </div>
 
@@ -20,6 +20,8 @@ can run synchronously, with `async`/`await`, or as CUDA graph replay.
 We are excited to release this research project as a demonstration of how GPU programming can be made available in the Rust ecosystem. The software is in an early stage and under active development: you should expect bugs, incomplete features, and API breakage as we work to improve it. That being said, we hope you'll be interested to try it in your work and help shape its direction by providing feedback on your experience.
 
 Please check out [CONTRIBUTING.md](CONTRIBUTING.md) if you're interested in contributing.
+
+Run the Cargo and Nix commands in this README from the `cutile-rs/` directory.
 
 ## Quick Start
 
@@ -87,7 +89,7 @@ GPU and emitted Tile IR requirements for cuTile Rust:
 <!-- END TILE IR TARGETS -->
 
 For DGX Spark / GB10 (`sm_121`), see the
-[DGX Spark tutorial](https://nvlabs.github.io/cutile-rs/tutorials/12-dgx-spark-inference.html).
+[DGX Spark tutorial](https://nvidia.github.io/cuda-rust/cutile-rs/main/tutorials/12-dgx-spark-inference.html).
 
 CUDA **13.3 is recommended**. FP4 packing and block-scaled MMA require 13.3.
 GPUs below `sm_80` (such as `sm_70` and `sm_75`) are unsupported.
@@ -179,9 +181,6 @@ nix develop -c cargo run -p cutile-examples --example saxpy
 Or open an interactive shell:
 ```bash
 nix develop
-# cutile-rs dev shell
-#  ✓ CUDA  /nix/store/...-cuda-toolkit-13.3
-#  ✓ Rust  1.90.0-nightly
 ```
 
 The flake automatically locates host NVIDIA driver libraries on both NixOS and non-NixOS systems.

@@ -38,8 +38,8 @@ alongside the normal host binary.
 
 ## `cuda-async`
 
-The async execution layer, a crate shared with cutile-rs and published from
-NVlabs/cutile-rs. The cuda-oxide model lives under `cuda_async::simt`:
+The async execution layer is shared by cuda-oxide and cuTile and lives at the
+repository root. Its SIMT API is under `cuda_async::simt`:
 `DeviceOperation` (lazy GPU work description), `DeviceFuture` (stream-bound
 execution), and `DeviceBox<T>` (device-owned memory). Compose work with
 `zip!`, `and_then`, and `value()`.
@@ -54,8 +54,8 @@ cores, atomics, and debug facilities.
 
 Safe RAII wrappers around the CUDA Driver API: `CudaContext`, `CudaStream`,
 `DeviceBuffer<T>`, and module loading. Handles GPU context and memory management
-on the host side. Shared with cutile-rs and published from NVlabs/cutile-rs;
-the cuda-oxide surface is re-exported at the crate root except
+on the host side. The crate is shared by cuda-oxide and cuTile and lives at the
+repository root. Its SIMT surface is re-exported at the crate root except
 `simt::LaunchConfig`, `simt::vmm`, `simt::peer`, and `simt::memory`.
 
 ## `DeviceOperation`

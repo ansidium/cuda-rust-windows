@@ -176,7 +176,7 @@ let (_z, w) = ScaleKernel {
 .await?;
 ```
 
-See [`interop.rs`](https://github.com/NVlabs/cutile-rs/blob/main/cutile-examples/examples/interop.rs) for a complete, runnable version.
+See [`interop.rs`](https://github.com/NVIDIA/cuda-rust/blob/main/cutile-rs/cutile-examples/examples/interop.rs) for a complete, runnable version.
 
 ---
 

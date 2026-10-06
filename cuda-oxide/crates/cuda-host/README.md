@@ -361,5 +361,5 @@ specific 8x8 tile arrangements:
 
 - [cuda-device](../cuda-device/) -- device-side intrinsics
 - [cuda-macros](../cuda-macros/) -- proc-macro implementations
-- [cuda-core](https://github.com/NVlabs/cutile-rs/tree/main/cuda-core) -- shared CUDA driver API crate; `DeviceBuffer`, `simt::LaunchConfig`
-- [cuda-async](https://github.com/NVlabs/cutile-rs/tree/main/cuda-async) -- shared async crate; the SIMT model lives under `cuda_async::simt`
+- [cuda-core](../../../cuda-core/README.md) -- shared CUDA driver API crate; `DeviceBuffer`, `simt::LaunchConfig`
+- [cuda-async](../../../cuda-async/README.md) -- shared async crate; the SIMT model lives under `cuda_async::simt`

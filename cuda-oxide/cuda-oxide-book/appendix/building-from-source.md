@@ -249,9 +249,12 @@ cargo doc --no-deps --open
 This generates rustdoc for `cuda-device`, `cuda-host`, `cuda-macros`, and all
 other workspace members. The codegen backend is excluded since it is not a
 workspace member, and the shared host runtime (`cuda-core`, `cuda-async`) is
-documented from cutile-rs.
+documented from the repository root.
 
 ## Workspace structure
+
+The SIMT workspace lives under `cuda-oxide/`. The shared `cuda-bindings`,
+`cuda-core`, and `cuda-async` crates live at the repository root.
 
 ```text
 cuda-oxide/
@@ -261,8 +264,6 @@ cuda-oxide/
 │   ├── cuda-device/          # Device intrinsics (#![no_std])
 │   ├── cuda-host/            # Host launch APIs
 │   ├── cuda-macros/          # Proc macros (#[kernel], #[device], gpu_printf!)
-│   │                         # (cuda-bindings, cuda-core, cuda-async come from
-│   │                         #  NVlabs/cutile-rs; SIMT API under their simt modules)
 │   ├── cargo-oxide/          # Cargo subcommand
 │   ├── rustc-codegen-cuda/   # Codegen backend (not a workspace member)
 │   ├── mir-importer/         # MIR → Pliron IR translation

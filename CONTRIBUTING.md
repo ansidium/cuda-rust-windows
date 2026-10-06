@@ -83,14 +83,14 @@ This adds a line to your commit message:
 Signed-off-by: Your Name <your.email@example.com>
 ```
 
-If you have already made commits without sign-off, you can amend or rebase
-to add it:
+If unpublished commits on your feature branch lack sign-off, you can amend
+or rebase them to add it. Do not rewrite published `main` history:
 
 ```bash
-# Amend the most recent commit
+# Amend the most recent unpublished feature-branch commit
 git commit --amend -s --no-edit
 
-# Rebase and sign all commits in a branch
+# Rebase and sign unpublished commits in a feature branch
 git rebase --signoff main
 ```
 
@@ -124,9 +124,10 @@ cuda-oxide uses the latest stable Rust toolchain with the compiler-internal
 APIs enabled by the repository configuration.
 See the [README](README.md) for setup instructions.
 
-`cuda-oxide/flake.nix` provides the CUDA 13, LLVM 22, Clang, and pinned nightly
-development environment. From the repository root, run `cd cuda-oxide` and
-then `nix develop` with flakes enabled. Container setup is documented in
+`cuda-oxide/flake.nix` provides CUDA 13, LLVM 22, Clang, and the stable
+toolchain selected by `cuda-oxide/rust-toolchain.toml`. From the repository
+root, run `cd cuda-oxide` and then `nix develop` with flakes enabled.
+Container setup is documented in
 [cuda-oxide/.devcontainer/README.md](cuda-oxide/.devcontainer/README.md).
 
 ### Running the cuda-oxide checks
@@ -223,9 +224,14 @@ that script.
 
 - Windows patches must either pass the Linux checks or explain the Linux
   regression and the follow-up needed to restore upstream-compatible behavior.
-- Run at least the Windows MSVC check relevant to the change:
-  `cargo build -p cargo-oxide`, `cargo test -p oxide-artifacts --features object`,
-  or `.\scripts\smoketest.ps1 -BuildOnly`.
+- Run at least the Windows MSVC check relevant to the change. From the
+  repository root, use one of:
+
+  ```powershell
+  cargo build --manifest-path cuda-oxide/Cargo.toml -p cargo-oxide
+  cargo test --manifest-path cuda-oxide/Cargo.toml -p oxide-artifacts --features object
+  .\cuda-oxide\scripts\smoketest.ps1 -BuildOnly
+  ```
 - Path handling changes should include coverage for paths with spaces, such as
   `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\...`.
 - Do not introduce fork-only public API unless it has been discussed and the
@@ -234,8 +240,8 @@ that script.
 #### Running the CUDA-dependent crates without a GPU
 
 Most crates test on a machine with no GPU and no NVIDIA driver. `cuda-host`
-and `cuda-macros` build against the shared `cuda-bindings` crate from
-cutile-rs, which needs `cuda.h` and `curand.h` from a CUDA 13.0+ toolkit at
+and `cuda-macros` build against the shared `cuda-bindings` crate at the
+repository root, which needs `cuda.h` and `curand.h` from a CUDA 13.0+ toolkit at
 build time but loads `libcuda` at run time through `libloading`. The test
 binaries therefore carry no `libcuda.so.1` dependency and load without a
 driver; tests that need a real driver are `#[ignore]`d. A driver call made
@@ -262,9 +268,10 @@ error's `Display` names the library candidates the loader tried.
 
 ## IP Review Process
 
-All contributions to CUDA Rust are subject to NVIDIA's IP review process.
-Maintainers will ensure that contributions are reviewed in accordance with
-NVIDIA's open source policies before merging.
+Contributions submitted to upstream [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust)
+are subject to NVIDIA's IP review process. Upstream maintainers will ensure
+that contributions are reviewed in accordance with NVIDIA's open source
+policies before merging.
 
 For questions about the contribution process, please open an issue or contact
 the maintainers.
