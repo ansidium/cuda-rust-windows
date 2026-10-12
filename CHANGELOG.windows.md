@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Included upstream's umbrella documentation, shared contribution guide,
+  reference-parameter ABI attributes, and sparse FP8 metadata fix.
+- Kept stable Rust 1.99 compatibility after upstream moved to a dated nightly.
+- Updated the combined documentation site and Windows fork banner.
+
 - Included the shared host crates and cuTile import from upstream; the SIMT
   workspace now lives under `cuda-oxide/`.
 - Adapted the MIR importer and codegen backend to stable Rust 1.99.

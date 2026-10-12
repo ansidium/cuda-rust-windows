@@ -116,8 +116,8 @@ release-readiness gaps.
 - Weekly upstream sync: `.github/workflows/upstream-sync-main.yml` merges
   `NVIDIA/cuda-rust/main` into `main`, runs `.\scripts\sync-upstream.ps1
   -RunChecks -Push`, and opens or updates one issue if the sync fails.
-- Weekly hosted Windows canary: `.github/workflows/windows.yml` runs the
-  no-GPU MSVC lane on GitHub-hosted `windows-latest`.
+- Hosted Windows canary: `.github/workflows/windows.yml` runs the no-GPU
+  MSVC lane on every push and pull request, and weekly on `windows-latest`.
 - Manual sync: run `.\scripts\sync-upstream.ps1 -RunChecks`; add `-Push` only
   after the local result is clean.
 - Release rule: publish `windows-vX.Y.Z` only when upstream has released
@@ -141,6 +141,23 @@ from upstream:
 ```
 
 ## Current Divergence Log
+
+## 2026-10-12 - Stable compiler compatibility
+
+- Branch: `main`.
+- Upstream baseline: `upstream/main@d141118c05f705fcf932a8e9077dc714477edc4d`.
+- Files/area: MIR reference-parameter ABI facts, codegen backend, and host
+  kernel type identifiers.
+- Intentional divergence: use stable Rust rather than upstream's dated
+  nightly. Read ABI attributes through typed `rustc_internal` APIs where
+  stable `rustc_public` still exposes opaque values. Retain the upstream
+  `NoFree` requirement for dereferenceability and do not export `ReadOnly`.
+- Linux impact: the same stable compiler adaptation applies on both hosts;
+  CUDA discovery and runtime behavior remain platform-scoped.
+- Windows validation: the sync checks, reference-validity kernels, and
+  hosted MSVC canary cover this compiler adaptation.
+- Follow-up: remove the internal ABI bridge when stable `rustc_public`
+  exposes the attributes directly.
 
 ## 2026-06-22 - Upstream sync and non-rewriting maintenance
 
