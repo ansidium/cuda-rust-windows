@@ -70,7 +70,7 @@ required for `ptxas` and header files, but you will not be able to run kernels.
 ## Install LLVM (usually optional)
 
 The codegen pipeline emits LLVM IR and invokes `llc` to produce PTX. The
-stable Rust toolchain ships LLVM 22 with the NVPTX backend enabled via the
+stable Rust 1.99 toolchain ships LLVM 23 with the NVPTX backend enabled via the
 `llvm-tools` component, so the recommended
 path is:
 

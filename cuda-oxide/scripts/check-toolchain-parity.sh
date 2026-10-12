@@ -148,6 +148,12 @@ markdown = [
 ]
 dated = re.compile(r"nightly-\d{4}-\d{2}-\d{2}")
 for path in markdown:
+    # Catalog validation records name the upstream compiler that produced the
+    # evidence. They are provenance, not installation recommendations.
+    if path == "cuda-oxide/intrinsics/generated-reference.md" or path.startswith(
+        "cuda-oxide/intrinsics/evidence/"
+    ):
+        continue
     for number, line in enumerate(read(os.path.join(git_root, path)).splitlines(), start=1):
         if dated.search(line):
             failures.append(f"{path}:{number} contains a dated nightly")

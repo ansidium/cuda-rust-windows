@@ -62,7 +62,7 @@ work, move it to a short-lived branch before syncing.
 Merge upstream:
 
 ```bash
-git merge --no-ff upstream/main
+git merge --no-ff --signoff upstream/main
 ```
 
 Do not rewrite published `main` history for routine syncs.

@@ -7,9 +7,10 @@ on:
   pull_request:
     branches: [main]
 
+# main runs finish; any other ref cancels the older run of this workflow.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
 
 permissions:
   contents: read
@@ -124,7 +125,7 @@ jobs:
 
 # rustfmt comes from cuda-oxide/rust-toolchain.toml's component list through the
       # rustup proxy, as in fmt.yml, so the order checked is the pinned
-      # nightly's. No cargo, no CUDA toolkit, no network beyond the toolchain.
+      # stable toolchain's. No cargo, no CUDA toolkit, no network beyond the toolchain.
       - name: Verify the book's Rust blocks use rustfmt's import order
         run: bash cuda-oxide/scripts/check-book-import-order.sh
 
@@ -236,7 +237,7 @@ jobs:
         uses: actions/checkout@v4
 
       # Reads sources only: no rustup, no cargo, no CUDA toolkit.
-      - name: Verify every shared-crate pin agrees with the root workspace
+      - name: Verify the host crates are path dependencies at tip of tree and the scaffold matches the root version
         run: bash cuda-oxide/scripts/check-shared-crate-pin.sh
 
   # cuda-oxide/crates/oxide-artifacts is only the publish source now; the

@@ -103,4 +103,4 @@ html_js_files = [
 pygments_style = 'default'
 html_show_sourcelink = False
 html_title = "cuda-oxide"
-html_baseurl = "https://ansidium.github.io/cuda-rust-windows/"
+html_baseurl = "https://ansidium.github.io/cuda-rust-windows/cuda-oxide/"

@@ -92,7 +92,7 @@ if _docs_version:
     html_theme_options["switcher"] = {
         "json_url": os.environ.get(
             "CUTILE_DOCS_SWITCHER_JSON",
-            "/cutile-rs/_static/versions.json",
+            "/cuda-rust-windows/cutile/_static/versions.json",
         ),
         "version_match": _docs_version,
     }

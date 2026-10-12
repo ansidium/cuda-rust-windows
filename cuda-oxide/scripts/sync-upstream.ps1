@@ -243,7 +243,7 @@ $ancestorStatus = $LASTEXITCODE
 if ($ancestorStatus -eq 0) {
     Write-SyncStatus 'Merge' 'skipped (upstream already contained)'
 } elseif ($ancestorStatus -eq 1) {
-    Invoke-Git "git merge --no-ff --no-edit $upstreamRef" @('merge', '--no-ff', '--no-edit', $upstreamRef)
+    Invoke-Git "git merge --no-ff --no-edit --signoff $upstreamRef" @('merge', '--no-ff', '--no-edit', '--signoff', $upstreamRef)
     Write-SyncStatus 'Merge' 'completed'
 } else {
     throw "git merge-base --is-ancestor failed with exit code $ancestorStatus."

@@ -709,7 +709,10 @@ path = "src/main.rs"
     .unwrap();
 
     let mut cmd = Command::new("cargo");
-    cmd.args(["build", "--release"]).current_dir(&root);
+    // This fixture tests config.toml, not the caller's target-dir override.
+    cmd.args(["build", "--release"])
+        .env_remove("CARGO_TARGET_DIR")
+        .current_dir(&root);
     let binary = run_cargo_build_for_executable(&mut cmd, &root, None).unwrap();
 
     assert!(binary.exists());
