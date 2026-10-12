@@ -329,10 +329,7 @@ mod tests {
             "{message}"
         );
         // The message must identify the two hash producers and the remedy.
-        assert!(
-            message.contains("core::intrinsics::type_id"),
-            "{message}"
-        );
+        assert!(message.contains("core::intrinsics::type_id"), "{message}");
         assert!(message.contains("tcx.type_id_hash"), "{message}");
         assert!(message.contains("same compiler revision"), "{message}");
         assert!(message.contains("compute_kernel_export_name"), "{message}");
