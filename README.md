@@ -9,7 +9,7 @@
 </p>
 
 Windows-support fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust).
-Windows support targets `x86_64-pc-windows-msvc`; Windows GNU is not supported.
+Windows support targets `x86_64-pc-windows-msvc`.
 The fork uses the latest stable Rust with compiler-internal APIs enabled by
 the repository configuration.
 
