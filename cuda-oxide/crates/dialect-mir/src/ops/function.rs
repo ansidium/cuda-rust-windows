@@ -162,14 +162,19 @@ impl MirFuncOp {
         );
     }
 
-    /// The recorded `#[inline]` intent; None when the source had none. A value
-    /// naming no intent is an error, never read as "none": dropping a
-    /// `noinline` silently would change the generated code.
+    /// The recorded `#[inline]` intent; None when the source had none. A present
+    /// attribute with the wrong type or an unknown keyword is an error, never
+    /// read as "none": dropping a `noinline` silently would change the generated code.
     pub fn inline_intent(&self, ctx: &Context) -> Result<Option<InlineIntent>, String> {
         let op = self.get_operation().deref(ctx);
-        let Some(value) = op.attributes.get::<StringAttr>(&inline_intent_key()) else {
+        let key = inline_intent_key();
+        if !op.attributes.0.contains_key(&key) {
             return Ok(None);
-        };
+        }
+        let value = op
+            .attributes
+            .get::<StringAttr>(&key)
+            .ok_or_else(|| "inline intent attribute must be a string".to_string())?;
         let keyword = String::from(value.clone());
         InlineIntent::from_llvm_keyword(&keyword)
             .map(Some)
