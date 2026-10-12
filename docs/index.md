@@ -8,21 +8,21 @@ CUDA Rust is NVIDIA's CUDA platform for Rust. It provides host-side crates for
 working with the CUDA driver and device-side crates and tools for writing GPU
 kernels in idiomatic Rust.
 
-* [cuda-oxide](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-oxide)
+* [cuda-oxide](https://github.com/ansidium/cuda-rust-windows/tree/main/cuda-oxide)
   (<a href="cuda-oxide/">book</a>): A custom rustc codegen backend, cargo helper utility, and
   crates to help users target the traditional CUDA **SIMT** (Single Instruction,
   Multiple Threads) kernel programming model. Here users have access to every
   detail of device-side CUDA programming.
-* [cutile-rs](https://github.com/NVIDIA/cuda-rust/tree/main/cutile-rs)
+* [cutile-rs](https://github.com/ansidium/cuda-rust-windows/tree/main/cutile-rs)
   (<a href="cutile/">book</a>): A proc-macro plugin and crates to help users write CUDA
   kernels using the CUDA **Tile** programming model. Tensors in memory are
   partitioned into sub-tensors; a kernel loads tiles from them, computes on
   whole tiles at a time, and stores tiles back, and the compiler decides how
   tiles map onto each architecture.
-* Runtime: [`cuda-bindings`](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-bindings),
-  [`cuda-core`](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-core)
-  (with [`cuda-core-derive`](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-core-derive)),
-  and [`cuda-async`](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-async)
+* Runtime: [`cuda-bindings`](https://github.com/ansidium/cuda-rust-windows/tree/main/cuda-bindings),
+  [`cuda-core`](https://github.com/ansidium/cuda-rust-windows/tree/main/cuda-core)
+  (with [`cuda-core-derive`](https://github.com/ansidium/cuda-rust-windows/tree/main/cuda-core-derive)),
+  and [`cuda-async`](https://github.com/ansidium/cuda-rust-windows/tree/main/cuda-async)
   provide a shared runtime: driver bindings, contexts, streams, device buffers,
   events, and lazy, composable device operations.
 
@@ -107,6 +107,6 @@ Rust in this fork; cuda-oxide also requires `rustc-dev`, `rust-src`, and `llvm-t
 :maxdepth: 2
 :caption: Contents
 
-cuda-oxide <https://nvidia.github.io/cuda-rust/cuda-oxide/>
-cutile-rs <https://nvidia.github.io/cuda-rust/cutile/>
+cuda-oxide <https://ansidium.github.io/cuda-rust-windows/cuda-oxide/>
+cutile-rs <https://ansidium.github.io/cuda-rust-windows/cutile/>
 ```

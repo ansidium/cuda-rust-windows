@@ -2,10 +2,10 @@
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/NVIDIA/cuda-rust/main/cutile-rs/assets/logo.svg" alt="cuTile Rust" width="380">
+<img src="assets/logo.svg" alt="cuTile Rust" width="380">
 
 [![Crates.io](https://badgen.net/crates/v/cutile)](https://crates.io/crates/cutile)
-[![Docs](https://img.shields.io/badge/docs-book-blue.svg)](https://nvidia.github.io/cuda-rust/cutile/)
+[![Docs](https://img.shields.io/badge/docs-book-blue.svg)](https://ansidium.github.io/cuda-rust-windows/cutile/)
 
 </div>
 
@@ -18,14 +18,16 @@ can run synchronously, with `async`/`await`, or as CUDA graph replay.
 cuTile Rust is the Tile kernel programming model of
 [CUDA Rust](https://github.com/NVIDIA/cuda-rust), NVIDIA's CUDA platform for
 Rust. It shares the host runtime crates (`cuda-bindings`, `cuda-core`,
-`cuda-async`) with [cuda-oxide](https://github.com/NVIDIA/cuda-rust/tree/main/cuda-oxide),
+`cuda-async`) with [cuda-oxide](../cuda-oxide),
 the SIMT kernel programming model, and kernels from both models interoperate
 on the same CUDA stream.
 
 ## Project Status
-We are excited to release this research project as a demonstration of how GPU programming can be made available in the Rust ecosystem. The software is in an early stage and under active development: you should expect bugs, incomplete features, and API breakage as we work to improve it. That being said, we hope you'll be interested to try it in your work and help shape its direction by providing feedback on your experience.
 
-Please check out [CONTRIBUTING.md](https://github.com/NVIDIA/cuda-rust/blob/main/CONTRIBUTING.md) if you're interested in contributing.
+cuTile Rust is an early-stage research project. Expect bugs, incomplete features,
+and API changes.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution requirements and CI.
 
 Run the Cargo and Nix commands in this README from the `cutile-rs/` directory.
 
@@ -72,9 +74,9 @@ partition and stores the result in `z`. The partition determines the launch
 grid `(8, 1, 1)`: 1024÷128 = 8 tiles.
 
 - Run a similar example via `cargo run -p cutile-examples --example saxpy`.
-- [More kernel and host API examples](https://github.com/NVIDIA/cuda-rust/tree/main/cutile-rs/cutile-examples/examples).
+- [More kernel and host API examples](cutile-examples/examples).
 - For NVIDIA Nsight Compute, Nsight Systems, and cuda-gdb workflows, see
-  [Debugging and Profiling](https://nvidia.github.io/cuda-rust/cutile/latest/guide/debugging-and-profiling.html).
+  [Debugging and Profiling](https://ansidium.github.io/cuda-rust-windows/cutile/latest/guide/debugging-and-profiling.html).
 
 ## Setup
 

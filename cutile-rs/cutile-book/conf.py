@@ -55,7 +55,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/NVIDIA/cuda-rust",
+            "url": "https://github.com/ansidium/cuda-rust-windows",
             "icon": "fa-brands fa-github",
         },
     ],

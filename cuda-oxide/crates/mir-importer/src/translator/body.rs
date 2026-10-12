@@ -2155,7 +2155,7 @@ pub fn translate_body(
             let local = mir::Local::from(arg_idx + 1);
             let source_ty = &body.locals()[local].ty;
             let Some(validity) =
-                facts::reference_param_validity(source_ty, &fn_abi, arg_idx, &instance)
+                facts::reference_param_validity(source_ty, &fn_abi, arg_idx, instance)
                     .map_err(|error| input_error_noloc!(TranslationErr::invalid_op(error)))?
             else {
                 continue;
