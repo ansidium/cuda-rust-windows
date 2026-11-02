@@ -18,7 +18,7 @@ cargo +1.99.1 install --locked --path crates/cargo-oxide
 Install with the pinned toolchain:
 
 ```bash
-cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev cd4bb9e265b51f424ba9de718c0980316ea97925 cargo-oxide
+cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --tag windows-v0.3.0 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend if it's not already available.
@@ -442,7 +442,7 @@ Scaffolds a new standalone cuda-oxide project with `Cargo.toml`,
 `rust-toolchain.toml`, `.cargo/config.toml`, and a working `src/main.rs`
 containing a vector addition kernel. The default template uses
 `#[cuda_module]` with typed synchronous launch methods; `--async` generates a
-template with `tokio`, `cuda-async`, and typed lazy `DeviceOperation` launches.
+template with `tokio`, `cuda-async`, and lazy asynchronous launches.
 
 ```bash
 cargo oxide new my_kernel

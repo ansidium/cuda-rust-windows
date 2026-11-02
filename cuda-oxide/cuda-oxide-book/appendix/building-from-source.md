@@ -144,8 +144,8 @@ crates (`cuda-device`, `cuda-host`, `cuda-macros`, etc.) and the build tooling
 (`cargo-oxide`). The host runtime (`cuda-bindings`, `cuda-core`, `cuda-async`)
 is shared with cutile-rs and lives at the repository root; the SIMT workspace
 depends on those crates by path. This section, "Verify the installation", and
-"Common commands" run from `cuda-oxide/`, where the SIMT toolchain pin and the
-`cargo oxide` workspace alias apply:
+"Common commands" run from `cuda-oxide/`, where the SIMT toolchain pin and
+Cargo configuration apply:
 
 ```bash
 cd cuda-oxide
@@ -171,7 +171,7 @@ cargo +1.99.1 install --locked --path crates/cargo-oxide
 For standalone use, install it from Git with the pinned toolchain:
 
 ```bash
-cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev cd4bb9e265b51f424ba9de718c0980316ea97925 cargo-oxide
+cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --tag windows-v0.3.0 cargo-oxide
 ```
 
 On first run, `cargo-oxide` automatically fetches and builds the codegen backend
@@ -195,7 +195,7 @@ installation, and codegen backend. If everything is configured correctly,
 `cargo oxide run vecadd` compiles a Rust kernel to PTX, launches it on the GPU,
 and prints a success message.
 
-On Windows MSVC, the release-readiness smoke path is:
+On Windows MSVC, run these checks from `cuda-oxide/`:
 
 ```powershell
 cargo build --locked -p cargo-oxide

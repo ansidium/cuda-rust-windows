@@ -14,7 +14,7 @@ roadmap, **N/A** = not applicable or no identified need.
 
 | Feature | Status | Description |
 |:--------|:-------|:------------|
-| HMM / Unified Memory Management | **Full** | GPU directly reads/writes host memory without `cudaMemcpy`. Reference captures in closures leverage HMM for host pointer access. Requires Turing+ GPU, Linux 6.1.24+, CUDA 12.2+. |
+| HMM / Unified Memory Management | **Full** | GPU directly reads/writes host memory without `cudaMemcpy`. Reference captures in closures use HMM for host pointer access. Requires Turing+ GPU, Linux 6.1.24+, CUDA 12.2+. |
 | Unified Struct ABI (no `#[repr(C)]`) | **Full** | Device struct layout matches host exactly. The compiler queries rustc's actual layout and reproduces it with explicit padding in LLVM IR. Works with `#[repr(Rust)]` default. |
 | Dynamic Layout Matching | **Full** | Compiler queries rustc's `fields_by_offset_order()` and byte offsets, builds LLVM structs with correct field order and explicit padding bytes. Independent of LLVM's datalayout. |
 | Packed Layouts (`#[repr(packed)]`) | **Partial** | Field addresses formed through a pointer (`addr_of!((*p).field)`) use rustc's exact byte offsets, so `read_unaligned`/`write_unaligned` round-trips work, including `packed(N)`. Byte-faithful packed structs can also use packed LLVM storage for by-value construction/load/store and `[Packed; N]` element addressing. Recursively promotable packed constant arrays use the immutable-device-global path when the selected natural or packed LLVM representation reproduces rustc's field offsets and stored size exactly. Overlapping or otherwise non-representable layouts remain rejected. |

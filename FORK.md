@@ -1,244 +1,87 @@
-# CUDA Rust Windows Fork Policy
+# CUDA Rust Windows Fork
 
-## Purpose
+This fork adds `x86_64-pc-windows-msvc` support to
+[NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust).
+The upstream baseline is `cced2a35bcc557b30f27209ff3887b4eb728cb63`
+(CUDA-Oxide 0.3.0, shared host crates 0.5.0).
 
-This fork adds native Windows support for `x86_64-pc-windows-msvc` while
-keeping Linux behavior upstream-compatible. Windows changes cover build
-tools, library discovery, CI, smoke tests, and platform compatibility fixes.
+## Maintenance
 
-The shared host runtime lives at the repository root. SIMT examples use
-those crates through path dependencies; generated standalone projects pin
-the runtime and compiler to one fork revision. The isolated backend uses
-the in-tree COFF artifact writer; host crates use the published artifact
-format and types.
+- Sync upstream into `main` with merge commits. Do not rewrite published `main` history.
+- Base feature branches on the fork's synchronized `main`.
+- Keep Windows changes narrow. Preserve upstream behavior outside Windows.
+- Do not add fork-only public APIs without discussion and documentation.
+- Linux regressions block a change unless the pull request explains the
+  regression and the follow-up needed to restore compatibility.
+- Push only to the fork. Before pushing, run `git remote -v` and verify the
+  full `OWNER/REPOSITORY`; `NVIDIA/cuda-rust` is read-only.
 
-## Upstream Repository
+## Upstream sync
 
-- Upstream: https://github.com/NVIDIA/cuda-rust
-- Upstream branch: `NVIDIA/cuda-rust` `upstream/main`
-- Upstream source baseline: `cced2a35bcc557b30f27209ff3887b4eb728cb63`
-  (CUDA-Oxide 0.3.0; shared host crates 0.5.0).
-- Primary local branch: `main` Windows release fork branch tracking
-  `upstream/main`
-- Short-lived branches may be used for experiments, but routine upstream sync
-  lands directly on `main`.
-
-## Branch Rules
-
-- `main` remains the Windows release fork branch. It tracks
-  `NVIDIA/cuda-rust` `upstream/main`.
-- Short-lived branches may be used for Windows enablement work, experiments,
-  CI fixes, and compatibility patches.
-- Keep Windows patches narrow and reviewable. Prefer build-system, path,
-  environment, and documentation helpers over API changes.
-- Do not add fork-only public API unless it has been discussed and documented.
-- Linux regressions block Windows changes unless the pull request documents why
-  the regression is unavoidable and what follow-up restores parity.
-- Update the divergence log only for intentional behavior differences, not for
-  transient merge conflict resolution or ordinary documentation refreshes.
-
-## Upstream Sync
-
-Configure the upstream remote once:
+Start on a clean `main` branch. Configure `upstream` once:
 
 ```bash
 git remote add upstream https://github.com/NVIDIA/cuda-rust.git
-git remote -v
 ```
 
-Refresh upstream state:
+Fetch and merge:
 
 ```bash
 git fetch upstream --tags
-git checkout main
-git status --short
-```
-
-Regular sync should use this fetch-plus-merge flow on `main` so the fork keeps
-its published history intact while still carrying upstream commits promptly.
-
-The working tree must be clean before merging. If you have unfinished Windows
-work, move it to a short-lived branch before syncing.
-
-Merge upstream:
-
-```bash
+git switch main
 git merge --no-ff --signoff upstream/main
 ```
 
-Do not rewrite published `main` history for routine syncs.
+Accept upstream changes unrelated to Windows, then retain only the Windows
+compatibility changes still needed. Document intentional differences below.
 
-Conflict policy:
-
-- Preserve upstream behavior first. Prefer the upstream file when behavior is
-  unrelated to Windows support.
-- Re-apply Windows helpers after the upstream version is understood.
-- Keep compatibility patches narrow: paths, environment discovery, CI, docs,
-  and smoke support before public API changes.
-- Do not use conflict resolution to introduce Linux behavior changes.
-- Update this file only when the resolved result intentionally diverges from
-  upstream behavior.
-
-Run the canonical no-GPU checks from the repository root:
+The PowerShell helper combines the merge and checks. Run it from a clean
+repository root on `main`:
 
 ```powershell
 .\scripts\sync-upstream.ps1 -RunChecks
 ```
 
-Push a completed sync only after the checks pass:
+Add `-Push` to push `main` to `origin` after the checks pass. The helper does
+not create releases, move tags, or change versions.
+
+## Windows checks
+
+Run from the SIMT workspace:
 
 ```powershell
-.\scripts\sync-upstream.ps1 -RunChecks -Push
+cd cuda-oxide
+cargo build --locked -p cargo-oxide
+.\target\debug\cargo-oxide.exe doctor
+.\target\debug\cargo-oxide.exe build vecadd
+.\target\debug\cargo-oxide.exe run vecadd
+.\scripts\smoketest.ps1
 ```
 
-The helper merges `upstream/main` into `main` and, when `-Push` is passed,
-uses a normal `git push origin main`. It does not create releases, move tags,
-or change versions.
+Kernel execution needs an NVIDIA GPU. On a machine without one, use
+`.\scripts\smoketest.ps1 -BuildOnly`.
+Update [CHANGELOG.windows.md](CHANGELOG.windows.md) when Windows support changes.
 
-On a Windows GPU host, also run the full Windows smoke path:
+The [upstream monitor](.github/workflows/upstream-monitor.yml),
+[weekly sync](.github/workflows/upstream-sync-main.yml), and
+[Windows canary](.github/workflows/windows.yml) automate drift detection,
+upstream merges, and MSVC compilation checks.
 
-```powershell
-cargo oxide doctor
-cargo oxide build vecadd
-cargo oxide run vecadd
-.\cuda-oxide\scripts\smoketest.ps1
-```
+## Releases
 
-When a sync changes Windows readiness, update
-[CHANGELOG.windows.md](CHANGELOG.windows.md). Keep the changelog focused on
-validated targets, requirements, examples, unsupported items, and known
-release-readiness gaps.
+Publish `windows-vX.Y.Z` only after upstream has released the matching
+CUDA-Oxide version. Build the archive with
+`cuda-oxide/scripts/package-windows-release.ps1`; see
+[Windows setup](cuda-oxide/cuda-oxide-book/getting-started/windows.md).
 
-## Maintenance Cycle
+## Windows differences
 
-- Daily and weekly upstream monitor: `.github/workflows/upstream-monitor.yml`
-  compares this fork with `NVIDIA/cuda-rust/main` and opens or updates one
-  issue when upstream has new commits.
-- Weekly upstream sync: `.github/workflows/upstream-sync-main.yml` merges
-  `NVIDIA/cuda-rust/main` into `main`, runs `.\scripts\sync-upstream.ps1
-  -RunChecks -Push`, and opens or updates one issue if the sync fails.
-- Hosted Windows canary: `.github/workflows/windows.yml` runs the no-GPU
-  MSVC lane on every push and pull request, and weekly on `windows-latest`.
-- Manual sync: run `.\scripts\sync-upstream.ps1 -RunChecks`; add `-Push` only
-  after the local result is clean.
-- Release rule: publish `windows-vX.Y.Z` only when upstream has released
-  `vX.Y.Z`. Sync-only rebuilds do not invent new project versions.
+- MSVC CUDA enum conversions, COFF artifact embedding, and Windows DLL discovery.
+- Release-profile backend builds on Windows.
+- Generated projects pin the runtime and compiler dependencies to one fork revision.
+- The host, SIMT, and Tile workspaces use Rust 1.99.1. Upstream's host and Tile
+  pins are 1.98.0 at this baseline.
+- Fork CI uses GitHub-hosted CPU runners. NVIDIA's GPU runner pool is limited
+  to the canonical repository.
 
-## Divergence Log Format
-
-Use this format whenever the fork intentionally keeps behavior that differs
-from upstream:
-
-```text
-## YYYY-MM-DD - short title
-
-- Branch:
-- Upstream baseline:
-- Files/area:
-- Intentional divergence:
-- Linux impact:
-- Windows validation:
-- Follow-up:
-```
-
-## Current Divergence Log
-
-## 2026-11-02 - Shared runtime and stable upstream compiler
-
-- Branch: `main`.
-- Upstream baseline: `upstream/main@cced2a35bcc557b30f27209ff3887b4eb728cb63`.
-- Files/area: shared runtime, backend cache, CLI scaffolding, CUDA discovery,
-  artifact embedding, and CI.
-- Intentional divergence: retain MSVC enum conversions, COFF artifacts,
-  Windows DLL discovery, and immutable fork source pins. The host and Tile
-  workspaces use Rust 1.99.1 alongside SIMT; upstream still pins those two
-  workspaces to 1.98.0. Fork CI uses hosted CPU runners, and NVIDIA's Linux
-  GPU pool remains available only to the canonical repository.
-- Linux impact: retain upstream's temporary-file backend publication, GNU ELF
-  retention flags, and nvJitLink search under both `lib64/` and `lib/`.
-- Windows validation: shared runtime and CLI tests, backend library tests,
-  Clippy, and the PowerShell smoke path. `vecadd` on RTX 4080 produced all
-  1024 expected values with CUDA Toolkit 13.4.
-- Follow-up: the compiler's inline-intent and constant-memory implementations
-  now follow upstream. The older stable compiler entry below is historical.
-
-## 2026-10-12 - Stable compiler compatibility
-
-- Branch: `main`.
-- Upstream baseline: `upstream/main@d141118c05f705fcf932a8e9077dc714477edc4d`.
-- Files/area: MIR reference-parameter ABI facts, codegen backend, and host
-  kernel type identifiers.
-- Intentional divergence: use stable Rust rather than upstream's dated
-  nightly. Read ABI attributes through typed `rustc_internal` APIs where
-  stable `rustc_public` still exposes opaque values. Retain the upstream
-  `NoFree` requirement for dereferenceability and do not export `ReadOnly`.
-- Linux impact: the same stable compiler adaptation applies on both hosts;
-  CUDA discovery and runtime behavior remain platform-scoped.
-- Windows validation: the sync checks, reference-validity kernels, and
-  hosted MSVC canary cover this compiler adaptation.
-- Follow-up: remove the internal ABI bridge when stable `rustc_public`
-  exposes the attributes directly.
-
-## 2026-06-22 - Upstream sync and non-rewriting maintenance
-
-- Branch: `main` Windows release fork branch tracking `upstream/main`.
-- Upstream baseline: `upstream/main@d63a0a8d3fef2db450ee342bdcd862a7829c3cbb`,
-  CUDA-Oxide 0.2.1.
-- Files/area: upstream merge integration, cargo-oxide backend cache handling,
-  cuda-core upstream behavior, and sync automation.
-- Intentional divergence: keep the Windows support layer on current upstream
-  through merge-based `main` syncs.
-- Linux impact: intended to be none. Upstream `DeviceBuffer` behavior and
-  backend cache source/toolchain invalidation are preserved; Windows-specific
-  artifact naming, release-profile backend builds, and loader path handling
-  remain scoped to Windows targets.
-- Windows validation: run the no-GPU sync sequence and hosted Windows canary
-  before publishing release artifacts.
-- Follow-up: no new `windows-vX.Y.Z` release is needed until upstream publishes
-  a new CUDA-Oxide release baseline.
-
-## 2026-06-18 - Upstream sync and stronger Windows canary
-
-- Branch: `main` Windows release fork branch tracking `upstream/main`.
-- Upstream baseline: `upstream/main@56b843f618d973aef6ae4cb613b590008df09a70`,
-  CUDA-Oxide 0.2.1.
-- Files/area: Windows CI, cargo-oxide backend loader-path handling, and
-  cuda-core sync repair.
-- Intentional divergence: keep the Windows support layer synced with current
-  upstream while strengthening the hosted no-GPU Windows canary to install
-  `libffi:x64-windows` through a temporary vcpkg manifest seeded with the
-  runner's vcpkg baseline, build the codegen backend, and compile-check
-  `vecadd`.
-- Linux impact: intended to be none. The sync repair preserves the existing
-  `DeviceBuffer` behavior while filling fields required by upstream's
-  async-free model.
-- Windows validation: `cargo oxide setup` built
-  `rustc_codegen_cuda.dll` in release profile, and
-  `cargo oxide build vecadd --arch sm_75` completed successfully.
-- Follow-up: no new `windows-vX.Y.Z` release is needed until upstream publishes
-  a new CUDA-Oxide release baseline.
-
-## 2026-06-14 - Windows support layer
-
-- Branch: `main` Windows release fork branch tracking `upstream/main`.
-- Upstream baseline: `upstream/main@cb318ad4e4e37f5e1913ed0a13478af990e857f7`,
-  CUDA-Oxide 0.2.1.
-- Files/area: CUDA Toolkit discovery, Windows/MSVC path handling, platform
-  artifact naming, loader environment handling, import-library checks,
-  bindgen/CUDA compatibility, Windows CI, and smoke scripts.
-- Intentional divergence: add native Windows support infrastructure for
-  `x86_64-pc-windows-msvc` while keeping upstream Linux behavior first. The
-  Windows layer covers CUDA Toolkit discovery, Windows and MSVC paths,
-  `.exe`/`.dll`/`.obj` platform naming, `PATH` loader behavior, `cuda.lib` and
-  `ffi.lib` checks, bindgen/CUDA type compatibility, Windows CI, and
-  PowerShell smoke scripts.
-- Linux impact: intended to be none. If a Windows helper conflicts with
-  upstream Linux behavior, preserve upstream behavior first and re-apply only
-  the Windows-specific compatibility needed for MSVC support.
-- Windows validation: `cargo build -p cargo-oxide`,
-  `cargo test -p oxide-artifacts --features object`,
-  `cargo oxide doctor`, `cargo oxide build vecadd`, GPU-host
-  `cargo oxide run vecadd`, and `.\scripts\smoketest.ps1` as applicable.
-- Follow-up: during each upstream sync, check whether upstream has added native
-  equivalents and remove fork-only helpers when upstream behavior covers the
-  Windows case.
+Past changes are recorded in [CHANGELOG.windows.md](CHANGELOG.windows.md).

@@ -24,9 +24,6 @@ fails the same way with a "driver too old" message.
 
 :::{note}
 For Windows 10 22H2/11 (`x86_64-pc-windows-msvc`), see [Windows setup](windows.md).
-Windows runtime discovery and hosted CI are community-maintained by
-[ansidium](https://github.com/ansidium). Hosted runners check compilation and
-library loading; kernel execution is validated manually on Windows GPU hardware.
 :::
 
 ---
@@ -60,9 +57,13 @@ npx -y @devcontainers/cli up --workspace-folder ./cuda-oxide \
 Then run commands inside it with:
 
 ```bash
-npx -y @devcontainers/cli exec --workspace-folder . cargo install --locked --path crates/cargo-oxide
-npx -y @devcontainers/cli exec --workspace-folder . cargo oxide doctor
-npx -y @devcontainers/cli exec --workspace-folder . cargo oxide run vecadd
+npx -y @devcontainers/cli exec --workspace-folder ./cuda-oxide \
+  --config ./cuda-oxide/.devcontainer/devcontainer.json \
+  cargo install --locked --path crates/cargo-oxide
+npx -y @devcontainers/cli exec --workspace-folder ./cuda-oxide \
+  --config ./cuda-oxide/.devcontainer/devcontainer.json cargo oxide doctor
+npx -y @devcontainers/cli exec --workspace-folder ./cuda-oxide \
+  --config ./cuda-oxide/.devcontainer/devcontainer.json cargo oxide run vecadd
 ```
 
 If the host driver is too old, GPU commands such as `nvidia-smi`,
@@ -106,7 +107,7 @@ To add the same development environment to an existing project, run inside
 that project:
 
 ```bash
-nix flake init -t 'github:NVIDIA/cuda-rust?dir=cuda-oxide'
+nix flake init -t 'github:ansidium/cuda-rust-windows?dir=cuda-oxide'
 nix develop
 ```
 
@@ -324,7 +325,7 @@ cargo +1.99.1 install --locked --path crates/cargo-oxide
 **For use outside the repo** (your own projects), install it with the pinned toolchain:
 
 ```bash
-cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev cd4bb9e265b51f424ba9de718c0980316ea97925 cargo-oxide
+cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --tag windows-v0.3.0 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend. Subsequent runs reuse the cached build.

@@ -1,110 +1,74 @@
 # Windows Setup
 
-The Windows fork targets `x86_64-pc-windows-msvc` and tracks NVIDIA/cuda-rust.
-
-## Support Matrix
-
-| Platform | Target |
-|----------|--------|
-| Windows 10 22H2 / Windows 11 | `x86_64-pc-windows-msvc` |
-
+The Windows fork targets `x86_64-pc-windows-msvc` on Windows 10 22H2 and Windows 11.
 For Linux, see [Installation](installation.md).
 
 ## Requirements
 
-- Windows 10 22H2 or Windows 11.
 - NVIDIA GPU and a driver compatible with the installed CUDA Toolkit.
-- CUDA Toolkit 13.0+ and a CUDA 13.x-compatible driver (R580+), as required by
-  the shared host runtime.
-- Visual Studio 2022 Build Tools with the MSVC x64 toolchain and Windows SDK.
-- Rust 1.99.1 selected by `cuda-oxide/rust-toolchain.toml`.
-- Rust components: `rust-src`, `rustc-dev`, `rust-analyzer`, `rustfmt`,
+- [CUDA Toolkit 13.0+](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/).
+- Visual Studio 2022 or newer with MSVC x64 Build Tools and a Windows SDK.
+- Rust 1.99.1 with `rust-src`, `rustc-dev`, `rust-analyzer`, `rustfmt`,
   `clippy`, and `llvm-tools`.
-- Clang and libclang for `bindgen`.
+- LLVM/Clang with `libclang.dll`.
 
-## Release Archive
-
-Maintainers can build the Windows release archive with:
-
-```powershell
-.\cuda-oxide\scripts\package-windows-release.ps1
-```
-
-The script creates
-`cuda-oxide\target\windows-release\cuda-oxide-v<version>-x86_64-pc-windows-msvc.zip`
-with `cargo-oxide.exe`, `rustc_codegen_cuda.dll`, `README.md`, and
-`smoketest.ps1`. The executable and backend DLL are packaged side-by-side so
-the CLI can discover the backend without `CUDA_OXIDE_BACKEND`. A matching
-`.zip.sha256` file is written next to the archive for download verification.
-
-## Rust Toolchain
-
-The SIMT workspace pins Rust 1.99.1 in `cuda-oxide/rust-toolchain.toml`.
-Rustup installs it automatically when you run Cargo from `cuda-oxide/`.
-The manual commands are:
+Install the pinned Rust toolchain and components:
 
 ```powershell
 rustup toolchain install 1.99.1
 rustup component add rust-src rustc-dev rust-analyzer rustfmt clippy llvm-tools --toolchain 1.99.1
-rustup target add x86_64-pc-windows-msvc --toolchain 1.99.1
 ```
 
-## Visual Studio and Clang
+## Use the release archive
 
-Install Visual Studio 2022 Build Tools with "Desktop development with C++".
-Open a Developer PowerShell, or ensure the MSVC tools are on `PATH` before
-building.
-
-Install LLVM/Clang so `clang.exe` and `libclang.dll` are available. A common
-installation path is `C:\Program Files\LLVM\bin`.
-
-## CUDA Environment
-
-Adjust the CUDA version directory to match your installation:
+Download the ZIP and SHA-256 checksum from
+[Releases](https://github.com/ansidium/cuda-rust-windows/releases/latest).
+Extract the ZIP and keep `cargo-oxide.exe` and `rustc_codegen_cuda.dll` together.
 
 ```powershell
-$env:CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.0"
+.\smoketest.ps1
+.\cargo-oxide.exe new my-kernel
+cd my-kernel
+..\cargo-oxide.exe doctor
+..\cargo-oxide.exe run
+```
+
+The CLI finds the adjacent backend DLL automatically.
+
+## CUDA environment
+
+Use the CUDA version installed on your machine:
+
+```powershell
+$env:CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v13.4"
 $env:CUDA_TOOLKIT_PATH = $env:CUDA_PATH
-$env:CUDA_HOME = $env:CUDA_PATH
-$env:PATH = "$env:CUDA_PATH\bin\x64;$env:CUDA_PATH\bin;C:\Program Files\LLVM\bin;$env:PATH"
-$env:LIB = "$env:CUDA_PATH\lib\x64;$env:LIB"
-$env:INCLUDE = "$env:CUDA_PATH\include;$env:INCLUDE"
 $env:LIBCLANG_PATH = "C:\Program Files\LLVM\bin"
+$env:PATH = "$env:CUDA_PATH\bin\x64;$env:CUDA_PATH\bin;$env:LIBCLANG_PATH;$env:PATH"
 ```
 
-Use quotes around paths under `C:\Program Files\...`; Windows smoke and path
-tests should keep this space-containing layout covered.
+## Build from source
 
-## Validation Commands
-
-Run these from the repository's `cuda-oxide` directory:
+Open a Developer PowerShell for MSVC. Building the backend also requires
+`libffi:x64-windows` from vcpkg; set `VCPKG_ROOT` to your vcpkg checkout:
 
 ```powershell
+$env:VCPKG_ROOT = "C:\vcpkg"
+& "$env:VCPKG_ROOT\vcpkg.exe" install libffi:x64-windows
 cd cuda-oxide
-rustc -Vv
-cargo -V
-nvcc --version
-clang --version
-
-cargo build --locked -p cargo-oxide
-.\target\debug\cargo-oxide.exe doctor
-.\target\debug\cargo-oxide.exe build vecadd
-.\target\debug\cargo-oxide.exe run vecadd
+cargo install --locked --path crates/cargo-oxide
+cargo oxide doctor
+cargo oxide run vecadd
 ```
 
-`cargo oxide build vecadd` is the build-only check. `cargo oxide run vecadd`
-requires a usable NVIDIA GPU and driver. If the machine has no GPU, run the
-PowerShell smoke script in build-only mode:
+For a build-only check without a GPU, run `scripts/smoketest.ps1 -BuildOnly`
+from `cuda-oxide/`:
 
 ```powershell
 .\scripts\smoketest.ps1 -BuildOnly
 ```
 
-On a GPU machine, run:
+Maintainers can package the CLI and backend from the repository root with:
 
 ```powershell
-.\scripts\smoketest.ps1
+.\cuda-oxide\scripts\package-windows-release.ps1
 ```
-
-The smoke script prints `SMOKE PASS`, `SMOKE FAIL`, and `SMOKE SKIP` verdicts
-for each step.

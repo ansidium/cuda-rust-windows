@@ -2,7 +2,7 @@
 
 ## Compiler Feature Tests - Control Flow, Enums, Loops
 
-Comprehensive test suite for compiler features: multi-way match, Option<T>, for loops, iterators, shared memory address casting, and 64-bit arithmetic.
+Tests for compiler features: multi-way match, Option<T>, for loops, iterators, shared memory address casting, and 64-bit arithmetic.
 
 ## What This Example Tests
 

@@ -7,7 +7,7 @@ one covers what applies everywhere.
 ## Choose the workspace before running Cargo
 
 The root `Cargo.toml` is the stable host workspace. Its members are
-`cuda-bindings`, `cuda-core`, `cuda-core-derive`, and `cuda-async`.
+`cuda-bindings`, `cuda-core`, `cuda-core-derive`, `cuda-async`, and `cuda-repr`.
 `cuda-oxide/` and `cutile-rs/` are separate nested workspaces, excluded from the
 root workspace. Running `cargo test` at the root tests the host workspace;
 it does not test either kernel programming model.
@@ -30,6 +30,7 @@ contribution guide. There is no root `Justfile`. The SIMT recipes live in
 
 - `cuda-bindings/`, `cuda-core/`, `cuda-core-derive/`, and `cuda-async/` — shared
   host crates in the root workspace. Both kernel stacks depend on these by path.
+- `cuda-repr/` — shared `no_std` representation contracts in the root workspace.
 - `cuda-oxide/` — the SIMT model. Its `Cargo.toml` explicitly lists workspace
   members under `crates/`; its `rust-toolchain.toml` pins the stable release
   (`1.99.1`) and `rustc-dev` / `llvm-tools` components needed for `rustc_private`

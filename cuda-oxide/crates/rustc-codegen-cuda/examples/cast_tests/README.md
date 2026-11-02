@@ -1,6 +1,6 @@
 # Cast Operations Test
 
-Comprehensive test suite for MIR cast kind handling in the codegen backend. Exercises every
+Tests for MIR cast handling in the codegen backend. Exercises every
 `CastKind` variant that can appear in device code, including the struct↔ptr conversions
 required for fat pointers and newtypes.
 

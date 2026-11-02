@@ -81,7 +81,7 @@ Build and run with `cargo oxide run vecadd` upon installing the [prerequisites](
 :::{note}
 `#[cuda_module]` embeds the generated device artifact into the host binary and
 generates a typed `kernels::load` function plus one launch method per kernel.
-Kernel arguments are type-checked. A declared `#[launch_contract]` unlocks the
+Kernel arguments are type-checked. A declared `#[launch_contract]` enables the
 safe `PreparedLaunch` path (`prepare_*` + typed launch) described in
 [Launching Kernels](gpu-programming/launching-kernels.md). A raw `LaunchConfig`
 call remains available as an unsafe escape hatch when you need a one-off

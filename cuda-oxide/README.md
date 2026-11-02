@@ -174,7 +174,7 @@ cargo +1.99.1 install --locked --path crates/cargo-oxide
 For use outside the repository, install the pinned fork CLI:
 
 ```bash
-cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev cd4bb9e265b51f424ba9de718c0980316ea97925 cargo-oxide
+cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --tag windows-v0.3.0 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend.
@@ -360,7 +360,7 @@ cargo oxide run gemm_sol_final
 | `cuda-artifact-finalizer` | Driver-independent NVVM IR, LTOIR, and PTX finalization         |
 | `cuda-toolkit-discovery`  | Workspace-private CUDA Toolkit discovery for Linux and Windows |
 | `oxide-artifacts`         | Architecture-neutral embedded device artifact metadata         |
-| `oxide-tile-export`       | Export descriptions shared by `cuda-macros`, the backend and `cargo-oxide`; part of the Tile IR interop work, not released yet |
+| `oxide-tile-export`       | Descriptions of SIMT functions exported to Tile IR libraries |
 | `oxide-tilebc`            | Tile IR bytecode writer for those export descriptions |
 | `reserved-oxide-symbols`  | Workspace-private `cuda_oxide_*` symbol-name contract          |
 | `fuzzer`                  | Differential codegen fuzzer support (rustlantis adapter)       |

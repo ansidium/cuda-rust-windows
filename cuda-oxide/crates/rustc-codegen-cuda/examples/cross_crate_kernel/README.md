@@ -170,8 +170,7 @@ in their MIR (compiled without `panic=abort`). The codegen backend handles this 
 2. **Treating** unwind paths as unreachable (CUDA toolchain doesn't support unwinding today)
 3. **No special flags needed** - works with vanilla Rust code
 
-This enables seamless cross-crate kernel development without custom sysroots or special
-build configurations.
+Cross-crate kernels use the standard Rust sysroot.
 
 ## See Also
 

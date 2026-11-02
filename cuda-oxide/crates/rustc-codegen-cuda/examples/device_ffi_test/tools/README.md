@@ -113,11 +113,9 @@ Load cubin and run tests (use Rust harness instead):
 
 ---
 
-## Future: Rust Bindings
+## Rust Bindings
 
-These C tools are temporary. The plan is to create:
-
-- `libnvvm-sys` - Rust FFI bindings to libNVVM
-- `nvjitlink-sys` - Rust FFI bindings to nvJitLink
-
-This will enable seamless LTOIR linking from Rust without external tools.
+Rust bindings are available in
+[`libnvvm-sys`](../../../../libnvvm-sys/README.md) and
+[`nvjitlink-sys`](../../../../nvjitlink-sys/README.md). The C tools here remain
+standalone examples.

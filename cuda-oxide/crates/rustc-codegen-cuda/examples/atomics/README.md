@@ -2,7 +2,7 @@
 
 ## Sound GPU Atomics with Explicit Scope and Ordering
 
-Comprehensive test suite for cuda-oxide's atomic operations. Demonstrates
+Tests for cuda-oxide's atomic operations. Covers
 all atomic types, all RMW operations, memory orderings, and the LLVM
 fence-splitting workaround -- running end-to-end on real hardware.
 

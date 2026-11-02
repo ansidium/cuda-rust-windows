@@ -1,106 +1,24 @@
-# Windows Support Notes
+# Windows Changelog
 
-## Unreleased
+## [windows-v0.3.0](https://github.com/ansidium/cuda-rust-windows/releases/tag/windows-v0.3.0) - 2026-11-02
 
-### 2026-11-02
-
-- Merged 89 upstream commits through `cced2a35b`, including CUDA-Oxide 0.3.0,
-  shared host crates 0.5.0, the unified async runtime, and the CuTe preview.
-- Pinned the host, SIMT, Tile, and CI compiler environments to Rust 1.99.1.
-- Preserved MSVC ABI conversions, COFF embedding, DLL discovery, and pinned
-  fork scaffolds while adopting upstream's backend cache publication fix.
-- Adapted the new archive extraction, PTX output validation, license guards,
-  and platform-specific tests for Windows.
-- Refreshed standalone example lockfiles and made the CuTe comparison
-  dispatch tests run on Windows as well as Unix.
-- Verified native `vecadd` execution on RTX 4080: 1024 of 1024 values correct.
-
-### Previous updates
-
-- Included upstream's umbrella documentation, shared contribution guide,
-  reference-parameter ABI attributes, and sparse FP8 metadata fix.
-- Kept stable Rust 1.99 compatibility after upstream moved to a dated nightly.
-- Updated the combined documentation site and Windows fork banner.
-
-- Included the shared host crates and cuTile import from upstream; the SIMT
-  workspace now lives under `cuda-oxide/`.
-- Adapted the MIR importer and codegen backend to stable Rust 1.99.
-- Preserved the native Windows CUDA enum ABI in the shared runtime.
-- Updated Windows CI, setup paths, and release packaging for the new layout.
-
-- Switched the workspace, devcontainer, CLI scaffold, CI, and documentation
-  from a dated nightly pin to the latest stable Rust channel.
-- Adapted the MIR importer and private codegen-backend API to stable Rust 1.97.
-- Merged `main` with
-  `upstream/main@8d02eac17e56d5ed5ad3713fc498a2591d810919`.
-- Added a weekly upstream sync workflow for `main`; failed syncs open or update
-  one issue.
-- Strengthened the hosted Windows no-GPU canary so the regular `windows`
-  workflow installs `libffi:x64-windows` through a temporary vcpkg manifest,
-  seeds that manifest with the runner's vcpkg baseline, builds the codegen
-  backend, and compile-checks `vecadd` with `cargo oxide build vecadd --arch sm_75`.
-- Restored `DeviceBuffer` context binding, empty-buffer copy fast paths, and
-  the previous `copy_from_host_async(src, stream)` entry point after merging
-  upstream's safer host-copy API.
-- Resolved upstream-sync fallout around `DeviceBuffer` field initialization
-  after upstream's async-free changes.
-- No new Windows release was published; the upstream release baseline remains
-  CUDA-Oxide `v0.2.1`.
+- Updated to CUDA-Oxide 0.3.0 and the shared host runtime 0.5.0.
+- Pinned Rust 1.99.1 across the host, SIMT, and Tile workspaces. CUDA Toolkit
+  13.0 or newer is required.
+- Preserved MSVC ABI conversions, COFF embedding, and Windows CUDA DLL discovery.
+- Adopted upstream's backend cache publication fix and retained the fork's
+  source pins for standalone projects.
+- Fixed Windows archive extraction, PTX output path validation, and the
+  CuTe comparison dispatch tests.
+- Refreshed standalone example lockfiles and updated CI for the shared runtime.
 
 ## windows-v0.2.1 - 2026-06-14
 
-### Upstream Baseline and Versioning
+- Updated to upstream CUDA-Oxide v0.2.1 at
+  `cb318ad4e4e37f5e1913ed0a13478af990e857f7`.
+- Added upstream monitoring, scheduled syncs, and hosted Windows MSVC checks.
+- Added Windows CUDA discovery, COFF artifacts, and PowerShell smoke scripts.
+- Used release-profile backend builds to avoid MSVC debug linker object limits.
 
-- Current upstream baseline:
-  `upstream/main@cb318ad4e4e37f5e1913ed0a13478af990e857f7`.
-- Upstream release baseline: CUDA-Oxide `v0.2.1`.
-- Project version remains CUDA-Oxide 0.2.1.
-- Publish `windows-vX.Y.Z` only when upstream has released `vX.Y.Z`;
-  sync-only rebuilds do not invent new project versions.
-
-### Maintenance Automation
-
-- Added a daily and weekly upstream monitor workflow for `NVlabs/cuda-oxide`
-  drift.
-- Added a weekly hosted Windows no-GPU canary for the MSVC target.
-- Kept release publishing manual so tags, artifacts, and signatures stay under
-  maintainer control.
-- Build the codegen backend in release profile on Windows to avoid MSVC debug
-  linker object-count limits.
-
-### Supported Target
-
-- Windows support is scoped to `x86_64-pc-windows-msvc` on Windows 10 22H2
-  and Windows 11.
-- Linux remains upstream-compatible with NVlabs/cuda-oxide.
-
-### Requirements
-
-- NVIDIA GPU and a driver compatible with the installed CUDA Toolkit.
-- CUDA Toolkit 12.x or 13.x.
-- Visual Studio 2022 Build Tools with MSVC x64 and Windows SDK.
-- Stable Rust from `rust-toolchain.toml`.
-- Rust components: `rust-src`, `rustc-dev`, `llvm-tools`.
-- Clang/libclang for `bindgen`.
-
-### Validated Examples
-
-- `vecadd` is the primary Windows readiness example.
-- Build-only readiness: `cargo oxide build vecadd`.
-- Runtime readiness on a GPU host: `cargo oxide run vecadd`.
-- Scripted readiness: `.\scripts\smoketest.ps1`.
-
-### Unsupported Items
-
-- CUDA examples that require Linux-only tooling such as `cuda-gdb`.
-- Full GPU smoke on GitHub-hosted `windows-latest` runners, because they do not
-  provide NVIDIA GPU hardware.
-
-### Release-Readiness Checklist
-
-- `cargo fmt --all --check`
-- `cargo build -p cargo-oxide`
-- `cargo test -p oxide-artifacts --features object`
-- `cargo oxide doctor`
-- `cargo oxide build vecadd`
-- `cargo oxide run vecadd` on a Windows GPU host
+Windows GPU checks require local NVIDIA hardware. GitHub-hosted Windows
+runners check compilation and loading; `cuda-gdb` remains Linux-only.

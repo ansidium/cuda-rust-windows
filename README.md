@@ -8,14 +8,12 @@
   <img src="cuda-oxide/assets/cuda-rust-windows-banner.png" alt="cuda-rust: Rust CUDA kernels on Windows MSVC" width="900">
 </p>
 
-Windows-support fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust).
-Windows support targets `x86_64-pc-windows-msvc`.
-The fork uses the latest stable Rust with compiler-internal APIs enabled by
-the repository configuration.
+Windows fork of [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust)
+for `x86_64-pc-windows-msvc`, using pinned Rust 1.99.1.
 
 | Platform | Setup |
 | --- | --- |
-| Windows 10/11 x64, MSVC | [Windows setup](cuda-oxide/cuda-oxide-book/getting-started/windows.md) |
+| Windows 10/11 x64, MSVC | [Download](https://github.com/ansidium/cuda-rust-windows/releases/latest) · [Setup](cuda-oxide/cuda-oxide-book/getting-started/windows.md) |
 | Linux | [SIMT setup](cuda-oxide/README.md#setup) or [Tile setup](cutile-rs/README.md) |
 
 See [FORK.md](FORK.md) for fork differences and maintenance policy.

@@ -323,13 +323,13 @@ that script.
 
 - Windows patches must either pass the Linux checks or explain the Linux
   regression and the follow-up needed to restore upstream-compatible behavior.
-- Run at least the Windows MSVC check relevant to the change. From the
-  repository root, use one of:
+- Run the Windows MSVC checks relevant to the change from `cuda-oxide/`:
 
   ```powershell
-  cargo build --manifest-path cuda-oxide/Cargo.toml -p cargo-oxide
-  cargo test --manifest-path cuda-oxide/Cargo.toml -p oxide-artifacts --features object
-  .\cuda-oxide\scripts\smoketest.ps1 -BuildOnly
+  cd cuda-oxide
+  cargo build --locked -p cargo-oxide
+  cargo test --locked -p oxide-artifacts --features object
+  .\scripts\smoketest.ps1 -BuildOnly
   ```
 - Path handling changes should include coverage for paths with spaces, such as
   `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\...`.

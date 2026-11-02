@@ -19,11 +19,14 @@ Generated programs are terminating, UB-free, and deterministic. A discrepancy be
 always indicate a bug in them (or a bug in Rustlantis).
 
 ## Requirements
-- Latest stable Rust with the repository configuration
+- The Rust toolchain pinned in `cuda-oxide/rust-toolchain.toml`
 - rustup
 
 ## Config
-Install Miri and Cranelift with Rustup `rustup component add miri rustc-codegen-cranelift-preview`, then copy `config.toml.example` to `config.toml`
+The Miri and Cranelift backends in `config.toml.example` use `nightly`.
+Install the `miri` and `rustc-codegen-cranelift-preview` components for that
+backend toolchain. Copy `config.toml.example` to `config.toml` and adjust the
+backend paths.
 
 ## Usage
 
