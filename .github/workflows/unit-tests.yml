@@ -96,9 +96,6 @@ jobs:
           - package: cuda-artifact-finalizer
           # Shared, driverless CUDA Toolkit path and library discovery policy.
           - package: cuda-toolkit-discovery
-          # pure-Rust kernel-launch helpers + tcgen05 tiling tables
-          - package: cuda-host
-            needs_cuda: true
           # cargo subcommand wrapper; pure Rust, no CUDA toolkit required.
           # Running it on a runner with NO toolkit installed is the
           # regression gate for issue #87.
