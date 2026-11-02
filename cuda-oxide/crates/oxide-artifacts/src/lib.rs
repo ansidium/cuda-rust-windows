@@ -778,10 +778,17 @@ fn build_host_object_with_section(
     anchor_symbols: &[(&str, bool)],
 ) -> Result<Vec<u8>, ArtifactError> {
     use object::write::{Object, Symbol, SymbolSection};
-    use object::{SectionKind, SymbolFlags, SymbolKind, SymbolScope};
+    use object::{FileFlags, SectionKind, SymbolFlags, SymbolKind, SymbolScope};
 
     let target = HostObjectTarget::parse(target)?;
     let mut object = Object::new(target.format, target.architecture, target.endianness);
+    if target.format == object::BinaryFormat::Elf {
+        object.flags = FileFlags::Elf {
+            os_abi: elf::ELFOSABI_GNU,
+            abi_version: 0,
+            e_flags: 0,
+        };
+    }
     let section_id = object.add_section(
         Vec::new(),
         section_name.as_bytes().to_vec(),
@@ -867,6 +874,7 @@ impl HostObjectTarget {
 
 #[cfg(feature = "object-write")]
 mod elf {
+    pub const ELFOSABI_GNU: u8 = 3;
     pub const SHF_ALLOC: u64 = 0x2;
     pub const SHF_GNU_RETAIN: u64 = 0x20_0000;
 }
@@ -1243,6 +1251,13 @@ mod tests {
             "aarch64-pc-windows-msvc",
         ] {
             let object = build_host_object_for_target(&blob, target, None).unwrap();
+            if target.contains("linux") {
+                assert_eq!(
+                    object.get(7).copied(),
+                    Some(elf::ELFOSABI_GNU),
+                    "{target} ELF header must set EI_OSABI to ELFOSABI_GNU for SHF_GNU_RETAIN"
+                );
+            }
             let bundles = read_artifact_bundles_from_object_bytes(&object).unwrap();
             assert_eq!(bundles.len(), 1);
             assert_eq!(

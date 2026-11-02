@@ -26,7 +26,7 @@ use crate::error::{TranslationErr, TranslationResult};
 use crate::pipeline::StatementDebugInfoMap;
 use crate::translator::location::span_to_location;
 use crate::translator::values::{self, SlotAddrSpaceMap, ValueMap};
-use dialect_mir::attributes::ReferenceParamValidityAttr;
+use dialect_mir::attributes::{InlineIntentAttr, ReferenceParamValidityAttr};
 use dialect_mir::ops::MirFuncOp;
 use dialect_mir::types::address_space;
 use llvm_export::export::DebugKind;
@@ -39,20 +39,20 @@ use pliron::basic_block::BasicBlock;
 use pliron::builtin::op_interfaces::SymbolOpInterface;
 use pliron::context::{Context, Ptr};
 use pliron::identifier::{Identifier, Legaliser};
-use pliron::location::Located;
 use pliron::op::Op;
 use pliron::operation::Operation;
 use pliron::{input_err_noloc, input_error_noloc};
 use reserved_oxide_symbols::{
-    InlineIntent, MIR_GRID_CONSTANT_ALIGN_ATTR_PREFIX, MIR_GRID_CONSTANT_POINTEE_ATTR_PREFIX,
+    MIR_GRID_CONSTANT_ALIGN_ATTR_PREFIX, MIR_GRID_CONSTANT_POINTEE_ATTR_PREFIX,
 };
+use rustc_public::CrateDefType;
 
 // Re-export rustc_public types for convenience
 use rustc_hash::FxHashMap;
+use rustc_public::CrateDef;
 use rustc_public::mir;
 use rustc_public::mir::mono;
 use rustc_public::ty::{ConstantKind, FloatTy, IntTy, RigidTy, Ty, TyKind, UintTy};
-use rustc_public::{CrateDef, CrateDefType};
 use rustc_public_bridge::IndexedVal;
 
 /// Cluster dimensions extracted from `#[cluster(x,y,z)]` attribute.
@@ -1880,7 +1880,7 @@ fn emit_entry_allocas(
 /// * `rustc_mono_successors` - Exact per-block successor edges computed by
 ///   rustc's monomorphization rules under the device runtime-check policy
 /// * `is_kernel` - Add `gpu_kernel` attribute for kernel entry points
-/// * `inline` - The `#[inline]` intent, set as [`reserved_oxide_symbols::INLINE_INTENT_ATTR`] on
+/// * `inline` - The `#[inline]` request, recorded as [`InlineIntentAttr`] on
 ///   non-kernel functions (`set_inline_intent_attr`)
 /// * `override_name` - Custom export name (defaults to instance name)
 pub fn translate_body(
@@ -1890,7 +1890,7 @@ pub fn translate_body(
     rustc_mir_block_count: usize,
     rustc_mono_successors: &[Vec<usize>],
     is_kernel: bool,
-    inline: Option<InlineIntent>,
+    inline: Option<InlineIntentAttr>,
     override_name: Option<&str>,
     legaliser: &mut Legaliser,
     debug_kind: DebugKind,
@@ -2155,7 +2155,7 @@ pub fn translate_body(
             let local = mir::Local::from(arg_idx + 1);
             let source_ty = &body.locals()[local].ty;
             let Some(validity) =
-                facts::reference_param_validity(source_ty, &fn_abi, arg_idx, instance)
+                facts::reference_param_validity(instance, source_ty, &fn_abi, arg_idx)
                     .map_err(|error| input_error_noloc!(TranslationErr::invalid_op(error)))?
             else {
                 continue;
@@ -2376,7 +2376,7 @@ pub fn translate_body(
     }
 
     if let Some(scope_map) = debug_source_scopes
-        && debug_kind.variables_enabled()
+        && debug_kind.line_tables_enabled()
     {
         llvm_export::ops::set_debug_source_scope_map(ctx, op_ptr, scope_map);
     }
@@ -2515,15 +2515,15 @@ fn function_debug_name(instance: &mono::Instance, is_kernel: bool, export_name: 
     }
 }
 
-/// Record the `#[inline]` intent on the MIR function (`MirFuncOp::set_inline_intent`;
+/// Record the `#[inline]` request on the MIR function (`MirFuncOp::set_inline_intent`;
 /// `mir-lower` makes it the LLVM function attribute). Kernel entry points are
-/// excluded because they're `.entry` in PTX and never callees, so an inline
-/// keyword would be a no-op at best and rejected by LLVM at worst.
+/// excluded because they're `.entry` in PTX and never callees, so there is no
+/// call the request could apply to.
 fn set_inline_intent_attr(
     ctx: &mut Context,
     mir_func_op: &MirFuncOp,
     is_kernel: bool,
-    inline: Option<InlineIntent>,
+    inline: Option<InlineIntentAttr>,
 ) {
     if let Some(intent) = inline
         && !is_kernel
@@ -2743,9 +2743,145 @@ pub fn cuda_oxide_device_generated_kernel(mut wrapped: Wrapper<u16>) -> u32 {
         }
     }
 
+    /// Import a real MIR body with the source-scope sidecar supplied by the
+    /// codegen bridge, then verify its inline provenance survives MIR lowering.
+    /// Line tables need these scopes even when variable debug info is disabled.
+    #[test]
+    fn imported_inline_scopes_survive_lowering_in_line_table_and_full_modes() {
+        use llvm_export::ops::{DebugInlinedScope, DebugSourceScope};
+
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "cuda_oxide_inline_scopes_{}_{}",
+            std::process::id(),
+            unique
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        let fixture = root.join("entry.rs");
+        std::fs::write(&fixture, "pub fn entry() {}\n").unwrap();
+        let rustc = std::env::var_os("RUSTC").unwrap_or_else(|| "rustc".into());
+        let sysroot = std::process::Command::new(rustc)
+            .args(["--print", "sysroot"])
+            .output()
+            .unwrap();
+        assert!(sysroot.status.success());
+        let args = vec![
+            "rustc".to_string(),
+            "--edition=2024".to_string(),
+            "--crate-type=rlib".to_string(),
+            "--emit=metadata".to_string(),
+            format!("--out-dir={}", root.display()),
+            format!(
+                "--sysroot={}",
+                String::from_utf8(sysroot.stdout).unwrap().trim()
+            ),
+            fixture.display().to_string(),
+        ];
+        let worker_root = root.clone();
+        std::thread::Builder::new()
+            .stack_size(64 * 1024 * 1024)
+            .spawn(move || {
+                rustc_public::run!(&args, || {
+                    let item = rustc_public::all_local_items()
+                        .into_iter()
+                        .find(|item| item.name().ends_with("::entry"))
+                        .unwrap();
+                    let instance = mono::Instance::try_from(item).unwrap();
+                    let body = instance.body().unwrap();
+                    let successors: Vec<_> = body
+                        .blocks
+                        .iter()
+                        .map(|block| block.terminator.successors())
+                        .collect();
+                    let caller = DebugSourcePosition {
+                        file: fixture,
+                        line: 1,
+                        column: 1,
+                    };
+                    let scopes = DebugSourceScopeMap {
+                        scopes: vec![
+                            DebugSourceScope {
+                                id: 0,
+                                parent: None,
+                                span: Some(caller.clone()),
+                                inlined: None,
+                            },
+                            DebugSourceScope {
+                                id: 1,
+                                parent: Some(0),
+                                span: Some(DebugSourcePosition {
+                                    file: worker_root.join("helper.rs"),
+                                    line: 279,
+                                    column: 5,
+                                }),
+                                inlined: Some(DebugInlinedScope {
+                                    callee_name: "helper::group_rank".to_string(),
+                                    callsite: Some(caller),
+                                }),
+                            },
+                        ],
+                        locations: vec![],
+                    };
+                    for kind in [DebugKind::Off, DebugKind::LineTables, DebugKind::Full] {
+                        let mut ctx = Context::new();
+                        crate::translator::register_dialects(&mut ctx);
+                        let module = ModuleOp::new(&mut ctx, "test".try_into().unwrap());
+                        let region = module.get_operation().deref(&ctx).get_region(0);
+                        let block = region.deref(&ctx).iter(&ctx).next().unwrap();
+                        let function = translate_body(
+                            &mut ctx,
+                            &body,
+                            &instance,
+                            body.blocks.len(),
+                            &successors,
+                            false,
+                            None,
+                            Some("entry"),
+                            &mut Legaliser::default(),
+                            kind,
+                            Some(&scopes),
+                            None,
+                        )
+                        .unwrap();
+                        function.insert_at_back(block, &ctx);
+                        mir_lower::register(&mut ctx);
+                        mir_lower::lower_mir_to_llvm(&mut ctx, module.get_operation()).unwrap();
+                        let lowered = block
+                            .deref(&ctx)
+                            .iter(&ctx)
+                            .find(|op| {
+                                Operation::get_op::<llvm_export::ops::FuncOp>(*op, &ctx).is_some()
+                            })
+                            .unwrap();
+                        let expected = match kind {
+                            DebugKind::Off => None,
+                            DebugKind::LineTables | DebugKind::Full => Some(scopes.clone()),
+                        };
+                        assert_eq!(
+                            llvm_export::ops::debug_source_scope_map(&ctx, lowered),
+                            expected
+                        );
+                    }
+                    std::ops::ControlFlow::<(), _>::Continue(())
+                })
+                .expect("fixture compilation succeeds");
+            })
+            .unwrap()
+            .join()
+            .unwrap();
+        std::fs::remove_dir_all(root).ok();
+    }
+
     #[test]
     fn inline_intent_reaches_llvm_func_attr_before_export() {
-        for intent in InlineIntent::ALL {
+        for (intent, keyword) in [
+            (InlineIntentAttr::Hint, "inlinehint"),
+            (InlineIntentAttr::Always, "alwaysinline"),
+            (InlineIntentAttr::Never, "noinline"),
+        ] {
             let mut ctx = Context::new();
             crate::translator::register_dialects(&mut ctx);
 
@@ -2808,8 +2944,8 @@ pub fn cuda_oxide_device_generated_kernel(mut wrapped: Wrapper<u16>) -> u32 {
                 .unwrap_or_default();
             assert_eq!(
                 keywords,
-                [intent.llvm_keyword()],
-                "{intent:?} must become exactly its LLVM function attribute before export",
+                [keyword],
+                "{intent:?} must become its one LLVM function attribute before export",
             );
             assert_eq!(
                 llvm_export::ops::debug_function_name(&ctx, llvm_func.get_operation()).as_deref(),

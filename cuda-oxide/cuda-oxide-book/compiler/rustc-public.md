@@ -277,29 +277,97 @@ already explicit. The `mir-importer` crate translates this into Pliron IR
 (an MLIR-like framework), and from there the
 [lowering pipeline](lowering-pipeline.md) takes it the rest of the way to PTX.
 
-## Stable compiler tracking
+## Stabilizing the toolchain pin
 
-Even with `rustc_public` providing a stable *API*, the bridge layer
-(`rustc_public_bridge`) is still compiled against the compiler's internals
-and is not independently versioned. Compiler updates can therefore require
-small compatibility changes in cuda-oxide.
-
-cuda-oxide follows the stable channel via `rust-toolchain.toml`:
+Even with `rustc_public` providing a stable API, the bridge layer
+(`rustc_public_bridge`) is compiled against `librustc_driver.so` and is tied to
+an exact compiler build. Instead of chasing daily `nightly` snapshots,
+cuda-oxide pins an official **stable** Rust release via
+`rust-toolchain.toml`:
 
 ```toml
 [toolchain]
-channel = "stable"
-components = ["rust-src", "rustc-dev", "rust-analyzer", "rustfmt", "clippy", "llvm-tools"]
+channel = "1.99.1"
+components = ["rust-src", "rustc-dev", "rust-analyzer", "clippy", "rustfmt", "llvm-tools"]
 ```
 
-The backend cache records the full active compiler fingerprint and rebuilds
-when that fingerprint changes. Stable compiler updates are accepted only after
-the test and compile gates pass.
+When bumping this pin, run `cuda-oxide/scripts/check-toolchain-parity.sh` to
+verify that `scaffold.rs`, `.devcontainer/devcontainer.json`, the book, and the
+READMEs agree, and run `nix flake update rust-overlay` in `cuda-oxide/` so
+`cuda-oxide/flake.lock` carries the new release manifest.
 
-The workspace configuration enables the compiler-internal APIs required by
-the backend and device crates. This does not make those APIs stable; it keeps
-the selected compiler channel stable while preserving the existing backend
-architecture.
+```{figure} images/ecosystem-and-bootstrap.svg
+:align: center
+:width: 100%
+
+How custom Rust compiler backends ship in production, and what lives inside an official stable rustup release.
+```
+
+### Why stable rustc already has rustc_private and rustc_public
+
+Official stable rustc binaries are compiled from the same source tree as
+nightly; nothing is stripped out of the binary. In addition, rustup publishes
+the `rustc-dev` component (`librustc_driver.so`, `librustc_public.rlib`,
+`librustc_public_bridge.rlib`, and `librustc_middle.rlib`) for every stable
+release.
+
+When cargo-oxide invokes Cargo (and inside the workspace via
+`cuda-oxide/.cargo/config.toml`), it sets `RUSTC_BOOTSTRAP=1` in the process
+environment. That unlocks `#![feature(rustc_private)]` and `-Z` flags
+(`-Z codegen-backend=...`, `-Z mir-enable-passes=-JumpThreading`,
+`-Z always-encode-mir`) on the pinned stable compiler while giving developers
+and users a compiler that has already completed Rust's 12-week nightly and beta
+stabilization cycle.
+
+```{figure} images/dev-workflow-shift.svg
+:align: center
+:width: 100%
+
+Pinning an official stable release (`1.99.1`) in `cuda-oxide/rust-toolchain.toml` with `RUSTC_BOOTSTRAP=1` managed by cargo-oxide.
+```
+
+### Upstreaming to rustc_public without emergency toolchain bumps
+
+When a feature requires a new `rustc_public` query that we upstream to
+`rust-lang/rust` (such as `ArgAttributes` getters in
+`rust-lang/rust#163242`), it takes 6 to 12 weeks for that commit to reach the
+next stable Rust release.
+
+Because `rustc_public` only wraps data that already exists inside
+`rustc_middle` and `rustc_abi`, `crates/mir-importer/src/translator/facts.rs`
+acts as our quarantine boundary:
+
+1. **Day 1 (on the current stable pin):** Land the feature immediately by
+   reading the underlying `rustc_middle` / `rustc_target` field inside
+   `facts.rs` via `rustc_internal::internal(tcx, ...)`, while upstreaming the
+   `rustc_public` getter in parallel.
+2. **Next scheduled stable upgrade:** Once the new stable Rust release ships
+   with the upstreamed `rustc_public` API, replace the temporary internal read
+   in `facts.rs` with the `rustc_public` method call.
+
+```{figure} images/upstream-rustc-public-flow.svg
+:align: center
+:width: 100%
+
+Decoupling feature delivery from toolchain bumps using `facts.rs` and scheduled stable upgrades.
+```
+
+### Self-contained bundling for standalone and CUDA Toolkit distribution
+
+For standalone or CUDA Toolkit packaging (following the same model as
+Microsoft's `rustc_codegen_utc` and Ferrocene), users do not need `rustc-dev`
+(~930 MB of compiler-internal `.rlib`s used only when building the backend
+itself). A stripped runtime bundle containing `rustc`, `cargo`, `cargo-oxide`,
+`librustc_codegen_cuda.so` (34 MB stripped, 8.6 MB compressed),
+`librustc_driver.so`, `libLLVM.so`, and a pre-encoded `core`/`alloc`/`std`
+sysroot totals roughly 453 MB on disk (~120 MB compressed).
+
+```{figure} images/toolkit-bundle-and-sizes.svg
+:align: center
+:width: 100%
+
+Measured bundle footprint on `x86_64-unknown-linux-gnu` and the two-bucket maintenance workflow.
+```
 
 ---
 

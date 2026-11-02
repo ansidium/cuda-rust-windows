@@ -1,9 +1,9 @@
 # Stable pin for the git-root host workspace (cuda-bindings, cuda-core,
 # cuda-core-derive, cuda-async). rustup walks up from the working directory,
-# so `cargo` at the git root agrees with the Oxide toolchain under
-# cuda-oxide/. Keep this channel in lockstep with cutile-rs/rust-toolchain.toml.
+# so `cargo` at the git root does not inherit `cuda-oxide/rust-toolchain.toml`.
+# Keep this channel in lockstep with cutile-rs/rust-toolchain.toml.
 [toolchain]
-channel = "stable"
+channel = "1.99.1"
 components = [
     "rust-src",
     "rustc-dev",

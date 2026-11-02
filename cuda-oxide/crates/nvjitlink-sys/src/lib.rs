@@ -7,7 +7,8 @@
 //!
 //! nvJitLink links one or more LTOIR modules (and other input forms) into
 //! a final cubin or PTX. It is part of the CUDA Toolkit and ships at
-//! `<cuda>/lib64/libnvJitLink.so` on Linux and as `nvJitLink_*.dll` under
+//! `<cuda>/lib64/libnvJitLink.so` or `<cuda>/lib/libnvJitLink.so` on Linux
+//! and as `nvJitLink_*.dll` under
 //! `<cuda>/bin/` or `<cuda>/bin/x64/` on Windows.
 //!
 //! # Library discovery
@@ -16,7 +17,7 @@
 //! 1. `LIBNVJITLINK_PATH` env var, if set.
 //! 2. CUDA Toolkit roots and runtime search directories from
 //!    `cuda-toolkit-discovery`, including
-//!    `<root>/lib64/libnvJitLink.so` on Linux and
+//!    `<root>/lib64/libnvJitLink.so`, then `<root>/lib/libnvJitLink.so` on Linux and
 //!    `<root>/bin/x64/nvJitLink_*.dll` / `<root>/bin/nvJitLink_*.dll` on
 //!    Windows.
 //! 3. Platform loader names (`libnvJitLink.so.13`, `libnvJitLink.so.12`,

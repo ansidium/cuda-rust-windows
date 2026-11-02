@@ -16,7 +16,8 @@ format and types.
 
 - Upstream: https://github.com/NVIDIA/cuda-rust
 - Upstream branch: `NVIDIA/cuda-rust` `upstream/main`
-- Upstream release baseline: CUDA-Oxide 0.2.1
+- Upstream source baseline: `cced2a35bcc557b30f27209ff3887b4eb728cb63`
+  (CUDA-Oxide 0.3.0; shared host crates 0.5.0).
 - Primary local branch: `main` Windows release fork branch tracking
   `upstream/main`
 - Short-lived branches may be used for experiments, but routine upstream sync
@@ -141,6 +142,25 @@ from upstream:
 ```
 
 ## Current Divergence Log
+
+## 2026-11-02 - Shared runtime and stable upstream compiler
+
+- Branch: `main`.
+- Upstream baseline: `upstream/main@cced2a35bcc557b30f27209ff3887b4eb728cb63`.
+- Files/area: shared runtime, backend cache, CLI scaffolding, CUDA discovery,
+  artifact embedding, and CI.
+- Intentional divergence: retain MSVC enum conversions, COFF artifacts,
+  Windows DLL discovery, and immutable fork source pins. The host and Tile
+  workspaces use Rust 1.99.1 alongside SIMT; upstream still pins those two
+  workspaces to 1.98.0. Fork CI uses hosted CPU runners, and NVIDIA's Linux
+  GPU pool remains available only to the canonical repository.
+- Linux impact: retain upstream's temporary-file backend publication, GNU ELF
+  retention flags, and nvJitLink search under both `lib64/` and `lib/`.
+- Windows validation: shared runtime and CLI tests, backend library tests,
+  Clippy, and the PowerShell smoke path. `vecadd` on RTX 4080 produced all
+  1024 expected values with CUDA Toolkit 13.4.
+- Follow-up: the compiler's inline-intent and constant-memory implementations
+  now follow upstream. The older stable compiler entry below is historical.
 
 ## 2026-10-12 - Stable compiler compatibility
 

@@ -17,7 +17,7 @@ For Linux, see [Installation](installation.md).
 - CUDA Toolkit 13.0+ and a CUDA 13.x-compatible driver (R580+), as required by
   the shared host runtime.
 - Visual Studio 2022 Build Tools with the MSVC x64 toolchain and Windows SDK.
-- Latest stable Rust selected by `rust-toolchain.toml`.
+- Rust 1.99.1 selected by `cuda-oxide/rust-toolchain.toml`.
 - Rust components: `rust-src`, `rustc-dev`, `rust-analyzer`, `rustfmt`,
   `clippy`, and `llvm-tools`.
 - Clang and libclang for `bindgen`.
@@ -39,14 +39,14 @@ the CLI can discover the backend without `CUDA_OXIDE_BACKEND`. A matching
 
 ## Rust Toolchain
 
-The repository selects the stable toolchain in `rust-toolchain.toml`. Rustup
-will install it automatically when you run Cargo from the repository root, but the
-manual commands are:
+The SIMT workspace pins Rust 1.99.1 in `cuda-oxide/rust-toolchain.toml`.
+Rustup installs it automatically when you run Cargo from `cuda-oxide/`.
+The manual commands are:
 
 ```powershell
-rustup update stable
-rustup component add rust-src rustc-dev rust-analyzer rustfmt clippy llvm-tools --toolchain stable
-rustup target add x86_64-pc-windows-msvc --toolchain stable
+rustup toolchain install 1.99.1
+rustup component add rust-src rustc-dev rust-analyzer rustfmt clippy llvm-tools --toolchain 1.99.1
+rustup target add x86_64-pc-windows-msvc --toolchain 1.99.1
 ```
 
 ## Visual Studio and Clang

@@ -14,8 +14,8 @@ Atomic operations require **LLVM 22 or newer** for correct syncscope
 generation. Without it, scopes (`.gpu`, `.cta`, `.sys`) will be missing
 from generated PTX.
 
-The stable Rust 1.99 toolchain ships LLVM 23 with NVPTX enabled via the
-`llvm-tools` component, so the default onboarding path
+The pinned Rust toolchain (`1.99.1`) ships LLVM 23 with NVPTX
+enabled via the `llvm-tools` component, so the default onboarding path
 already satisfies this requirement:
 
 ```bash
@@ -83,7 +83,7 @@ CUDA_OXIDE_VERBOSE=1 cargo oxide run atomics
 
 ### Floating-point add lowering
 
-With upstream's LLVM 23 NVPTX defaults,
+With the pinned `1.99.1` toolchain's LLVM 23 NVPTX defaults,
 `atomic_f32_fetch_add_test` uses a compare-and-swap (CAS) loop for global memory.
 Generic-address-space `f32` adds also use a loop; shared `f32` and `f64` adds
 still use native instructions on supported targets. For example:
@@ -135,10 +135,12 @@ Pointer types survive compiler lowering; legacy NVVM uses scoped PTX for
 pointer exchange and compare-exchange. Private atomic storage uses ordinary
 accesses because no other thread can observe it.
 
-Contended counters use raw writable device pointers and the existing
-`from_ptr` atomic constructors. The host keeps their allocations alive and
-excludes non-atomic access until synchronization. Block barriers are reached
-by every thread, including the thread that performs the update.
+Contended counters arrive as slices of atomic wrapper types (`&[DeviceAtomic*]`,
+`&[BlockAtomicU32]`, and `&[core::sync::atomic::AtomicU32]`) backed by host
+buffers retyped with `DeviceBuffer::cast_elem`. The host keeps their
+allocations alive and excludes non-atomic access until synchronization. Block
+barriers are reached by every thread, including the thread that performs the
+update.
 
 The separate `core_atomic_ordering_probe` kernel provides compile-only
 standard-library atomic ordering coverage.

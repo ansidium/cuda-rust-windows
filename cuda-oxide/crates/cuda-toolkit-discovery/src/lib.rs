@@ -290,7 +290,7 @@ fn nvjitlink_dll_candidates_from_roots(roots: Vec<PathBuf>, target: &str) -> Vec
     } else {
         roots
             .into_iter()
-            .map(|root| root.join("lib64").join("libnvJitLink.so"))
+            .flat_map(|root| ["lib64", "lib"].map(|dir| root.join(dir).join("libnvJitLink.so")))
             .collect()
     }
 }
@@ -350,7 +350,9 @@ mod tests {
                 nvjitlink_dll_candidates_from_roots(roots.clone(), LINUX_TARGET),
                 expected
                     .iter()
-                    .map(|root| root.join("lib64/libnvJitLink.so"))
+                    .flat_map(|root| {
+                        ["lib64", "lib"].map(|dir| root.join(dir).join("libnvJitLink.so"))
+                    })
                     .collect::<Vec<_>>()
             );
             assert_eq!(

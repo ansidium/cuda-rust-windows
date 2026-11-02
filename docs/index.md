@@ -44,7 +44,7 @@ and API changes.
 | Safety | Data-race freedom for disjoint slice accesses; you control thread synchronization and shared memory | Data-race freedom by construction within a kernel: no explicit thread indexing, shared memory, or synchronization |
 | Indexing | Explicit thread/block indices | Implicit via partitions |
 | Compiles | Ahead of time, Rust → PTX | JIT at first launch, Rust → Tile IR → cubin |
-| Toolchain | Latest stable Rust in this fork, managed by `cargo oxide` | Stable Rust |
+| Toolchain | Pinned stable Rust (`1.99.1`), managed by `cargo oxide` | Stable Rust 1.89 or newer |
 | Portability | Produces PTX that the driver compiles for compatible GPUs; you control tuning per GPU | CUDA architecture-agnostic; the compiler tunes per GPU |
 | Reach for it when | You need direct control over threads, warps, shared memory, TMA, or cluster ops | Your problem is naturally expressed as tensor computations and you want the compiler to handle scheduling details |
 
@@ -70,8 +70,7 @@ Disjoint slices give each thread exclusive access to its own elements, preventin
 when launch geometry matches the kernel's contract.
 You control how threads synchronize and use shared memory.
 
-Kernels compile ahead of time from Rust to PTX using stable Rust in this fork,
-managed by `cargo oxide`.
+Kernels compile ahead of time from Rust to PTX using a pinned stable Rust toolchain (`1.99.1`) managed by `cargo oxide`.
 You have direct control over how your kernels are tuned for each GPU architecture.
 
 Choose between Tile and SIMT based on [each kernel's requirements](https://docs.nvidia.com/cuda/cuda-programming-guide/01-introduction/programming-model.html#relationship-to-simt-programming).
@@ -100,8 +99,10 @@ guides, and reference material. The runtime crates (`cuda-bindings`,
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/ansidium/cuda-rust-windows/blob/main/CONTRIBUTING.md)
-for commit sign-off requirements, pull requests, and CI. Both models use stable
-Rust in this fork; cuda-oxide also requires `rustc-dev`, `rust-src`, and `llvm-tools`.
+for commit sign-off requirements, pull requests, and CI. Both components build
+on stable Rust and pin their toolchains in their respective `rust-toolchain.toml`
+files (with `rustc-dev` and `llvm-tools` for `cuda-oxide`, managed via
+`cargo oxide`); each book covers its own setup.
 
 ```{toctree}
 :maxdepth: 2

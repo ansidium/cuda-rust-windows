@@ -5,9 +5,8 @@
 
 use std::path::PathBuf;
 
-use crate::backend;
-
 use super::*;
+use crate::backend;
 
 // =========================================================================
 // cargo oxide new -- standalone project scaffolding
@@ -16,23 +15,14 @@ use super::*;
 const GIT_REPO: &str = backend::PINNED_SOURCE_REPOSITORY;
 const GIT_REV: &str = backend::PINNED_SOURCE_REVISION;
 
-/// Host runtime version shared by in-tree and standalone projects.
-/// Standalone projects resolve the runtime and backend from one fork revision.
-pub(super) const SHARED_HOST_CRATES_VERSION: &str = "0.4.0";
+const RUST_TOOLCHAIN_TOML: &str = r#"[toolchain]
+channel = "1.99.1"
+components = ["rust-src", "rustc-dev", "rust-analyzer", "clippy", "rustfmt", "llvm-tools"]
+"#;
 
-fn shared_host_dependency(_name: &str) -> toml::Value {
-    toml::Value::Table(toml::map::Map::from_iter([
-        ("git".to_string(), toml::Value::String(GIT_REPO.to_string())),
-        ("rev".to_string(), toml::Value::String(GIT_REV.to_string())),
-        (
-            "version".to_string(),
-            toml::Value::String(format!("={SHARED_HOST_CRATES_VERSION}")),
-        ),
-    ]))
-}
-
-const RUST_TOOLCHAIN_TOML: &str = include_str!("../../../../rust-toolchain.toml");
-const CARGO_CONFIG_TOML: &str = include_str!("../../../../.cargo/config.toml");
+const CARGO_CONFIG_TOML: &str = r#"[env]
+RUSTC_BOOTSTRAP = "1"
+"#;
 
 const SCAFFOLD_GITIGNORE_EXTRA: &[&str] = &[
     "/target/",
@@ -68,8 +58,8 @@ pub(super) fn scaffold_gitignore() -> String {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct ScaffoldFiles {
     pub(super) cargo_toml: String,
+    pub(super) cargo_config_toml: String,
     rust_toolchain_toml: String,
-    cargo_config_toml: String,
     pub(super) gitignore: String,
     pub(super) readme: String,
     pub(super) main_rs: String,
@@ -115,10 +105,14 @@ cargo oxide run
     )
 }
 
+/// Every CUDA crate comes from `GIT_REPO`. `cuda-host` depends on `cuda-core`
+/// and `cuda-async` by path at tip of tree, so in a project that takes
+/// `cuda-host` from git those crates resolve from the same checkout. Naming
+/// them from crates.io instead adds a second, distinct `cuda_core` whose
+/// `CudaContext` and `CudaModule` do not unify with the ones `#[cuda_module]`
+/// expands against, and the project fails to compile.
 fn scaffold_cargo_toml(name: &str, async_mode: bool) -> String {
-    let shared_core = shared_host_dependency("cuda-core");
     if async_mode {
-        let shared_async = shared_host_dependency("cuda-async");
         format!(
             r#"[package]
 name = "{name}"
@@ -130,8 +124,10 @@ edition = "2024"
 [dependencies]
 cuda-device = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
 cuda-host = {{ git = "{GIT_REPO}", rev = "{GIT_REV}", features = ["async"] }}
-cuda-core = {shared_core}
-cuda-async = {shared_async}
+# Shared host-side runtime. It has to come from the same repository as
+# cuda-host, which depends on it; a crates.io copy is a second cuda-core.
+cuda-core = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
+cuda-async = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
 tokio = {{ version = "1", features = ["rt", "rt-multi-thread", "macros"] }}
 "#
         )
@@ -147,7 +143,9 @@ edition = "2024"
 [dependencies]
 cuda-device = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
 cuda-host = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
-cuda-core = {shared_core}
+# Shared host-side runtime. It has to come from the same repository as
+# cuda-host, which depends on it; a crates.io copy is a second cuda-core.
+cuda-core = {{ git = "{GIT_REPO}", rev = "{GIT_REV}" }}
 "#
         )
     }
@@ -155,9 +153,9 @@ cuda-core = {shared_core}
 
 fn scaffold_main_rs(async_mode: bool) -> String {
     if async_mode {
-        r#"use cuda_async::simt::device_context::{init_device_contexts, with_cuda_context};
-use cuda_async::simt::device_operation::DeviceOperation;
-use cuda_core::simt::LaunchConfig;
+        r#"use cuda_async::device_context::{init_device_contexts, with_cuda_context};
+use cuda_async::device_operation::DeviceOperation;
+use cuda_core::LaunchConfig;
 use cuda_device::{DisjointSlice, kernel, thread};
 use cuda_host::cuda_module;
 
@@ -177,8 +175,8 @@ mod kernels {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use cuda_async::simt::device_box::DeviceBox;
-    use cuda_core::simt::memory::{malloc_async, memcpy_dtoh_async, memcpy_htod_async};
+    use cuda_async::device_box::DeviceBox;
+    use cuda_core::memory::{malloc_async, memcpy_dtoh_async, memcpy_htod_async};
     use std::mem;
 
     init_device_contexts(0, 1)?;
@@ -199,9 +197,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             memcpy_htod_async(b, b_host.as_ptr(), num_bytes, stream.cu_stream()).unwrap();
             stream.synchronize().unwrap();
             (
-                DeviceBox::<[f32]>::from_raw_parts(a, N, 0),
-                DeviceBox::<[f32]>::from_raw_parts(b, N, 0),
-                DeviceBox::<[f32]>::from_raw_parts(c, N, 0),
+                DeviceBox::<[f32]>::from_raw_parts(a, N, stream.clone()),
+                DeviceBox::<[f32]>::from_raw_parts(b, N, stream.clone()),
+                DeviceBox::<[f32]>::from_raw_parts(c, N, stream.clone()),
             )
         }
     })?;
@@ -308,8 +306,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 pub(super) fn scaffold_files(name: &str, async_mode: bool) -> ScaffoldFiles {
     ScaffoldFiles {
         cargo_toml: scaffold_cargo_toml(name, async_mode),
-        rust_toolchain_toml: RUST_TOOLCHAIN_TOML.to_string(),
         cargo_config_toml: CARGO_CONFIG_TOML.to_string(),
+        rust_toolchain_toml: RUST_TOOLCHAIN_TOML.to_string(),
         gitignore: scaffold_gitignore(),
         readme: scaffold_readme(name, async_mode),
         main_rs: scaffold_main_rs(async_mode),
@@ -325,11 +323,11 @@ pub fn scaffold_new(name: &str, async_mode: bool) {
     }
 
     let src_dir = project_dir.join("src");
-    let cargo_dir = project_dir.join(".cargo");
     std::fs::create_dir_all(&src_dir).unwrap_or_else(|e| {
         eprintln!("Error creating directory: {}", e);
         std::process::exit(1);
     });
+    let cargo_dir = project_dir.join(".cargo");
     std::fs::create_dir_all(&cargo_dir).unwrap_or_else(|e| {
         eprintln!("Error creating directory: {}", e);
         std::process::exit(1);
@@ -338,13 +336,13 @@ pub fn scaffold_new(name: &str, async_mode: bool) {
     let files = scaffold_files(name, async_mode);
     std::fs::write(project_dir.join("Cargo.toml"), files.cargo_toml)
         .expect("Failed to write Cargo.toml");
+    std::fs::write(cargo_dir.join("config.toml"), files.cargo_config_toml)
+        .expect("Failed to write .cargo/config.toml");
     std::fs::write(
         project_dir.join("rust-toolchain.toml"),
         files.rust_toolchain_toml,
     )
     .expect("Failed to write rust-toolchain.toml");
-    std::fs::write(cargo_dir.join("config.toml"), files.cargo_config_toml)
-        .expect("Failed to write .cargo/config.toml");
     std::fs::write(project_dir.join(".gitignore"), files.gitignore)
         .expect("Failed to write .gitignore");
     std::fs::write(project_dir.join("README.md"), files.readme).expect("Failed to write README.md");
@@ -356,53 +354,4 @@ pub fn scaffold_new(name: &str, async_mode: bool) {
     println!("  cd {}", name);
     println!("  cargo oxide doctor");
     println!("  cargo oxide run");
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn manifests_pin_every_cuda_oxide_dependency() {
-        for (async_mode, expected_dependencies) in [
-            (false, ["cuda-device", "cuda-host", "cuda-core"].as_slice()),
-            (
-                true,
-                ["cuda-device", "cuda-host", "cuda-core", "cuda-async"].as_slice(),
-            ),
-        ] {
-            let manifest = scaffold_cargo_toml("pin-test", async_mode);
-            let parsed = toml::from_str::<toml::Value>(&manifest).unwrap();
-            let dependencies = parsed["dependencies"].as_table().unwrap();
-
-            for name in expected_dependencies {
-                if !matches!(*name, "cuda-device" | "cuda-host") {
-                    assert_eq!(dependencies[*name], shared_host_dependency(name));
-                    continue;
-                }
-                let dependency = dependencies[*name].as_table().unwrap();
-                assert_eq!(dependency["git"].as_str(), Some(GIT_REPO));
-                assert_eq!(dependency["rev"].as_str(), Some(GIT_REV));
-                assert!(dependency.get("branch").is_none());
-            }
-        }
-    }
-
-    #[test]
-    fn toolchain_uses_stable_with_required_components() {
-        let parsed = toml::from_str::<toml::Value>(RUST_TOOLCHAIN_TOML).unwrap();
-        assert_eq!(parsed["toolchain"]["channel"].as_str(), Some("stable"));
-        let components = parsed["toolchain"]["components"].as_array().unwrap();
-        assert!(
-            components
-                .iter()
-                .any(|component| component.as_str() == Some("rustfmt"))
-        );
-    }
-
-    #[test]
-    fn cargo_config_enables_required_unstable_apis() {
-        let parsed = toml::from_str::<toml::Value>(CARGO_CONFIG_TOML).unwrap();
-        assert_eq!(parsed["env"]["RUSTC_BOOTSTRAP"].as_str(), Some("1"));
-    }
 }

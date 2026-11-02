@@ -912,7 +912,7 @@ fn report_unhealable_toolchain_mismatch(current: &str, recorded: &str) {
         toolchain_identity_line(recorded)
     );
     eprintln!(
-        "Your project's rust-toolchain.toml pins a different nightly than the \
+        "Your project's rust-toolchain.toml pins a different toolchain than the \
          cuda-oxide backend source it depends on. Align the pins (and run \
          `cargo oxide update` after changing them), or point CUDA_OXIDE_BACKEND \
          at a backend built with your project's toolchain."
@@ -974,6 +974,23 @@ fn invalidate_cache(cache_dir: &Path, backend_filename: &str) {
     clear_cache_contents(cache_dir, backend_filename);
 }
 
+/// Removes the temporaries left by installs killed between their copy and
+/// their rename (the names [`temporary_backend_path`] produces); each one is
+/// as large as the backend. Only the explicit `cargo oxide update` path
+/// removes them. The automatic invalidation in [`invalidate_cache`] runs from
+/// any project's lookup, possibly beside another project's installer, whose
+/// live temporary must stay until its rename.
+fn remove_stranded_backend_temporaries(cache_dir: &Path) {
+    let Ok(entries) = std::fs::read_dir(cache_dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        if is_backend_temporary(&entry.file_name().to_string_lossy()) {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+}
+
 fn clear_cache_contents(cache_dir: &Path, backend_filename: &str) {
     let _ = std::fs::remove_file(cache_dir.join(backend_filename));
     let _ = std::fs::remove_dir_all(cache_dir.join("src"));
@@ -1001,6 +1018,7 @@ pub fn refresh_cached_backend(project_dir: &Path) -> PathBuf {
         let backend_filename = backend_filename_for_target(&active_host_target());
         with_locked_backend_cache(&cache_dir, |dir| {
             clear_cache_contents(dir, &backend_filename);
+            remove_stranded_backend_temporaries(dir);
         })
         .unwrap_or_else(|error| {
             eprintln!("Failed to lock backend cache: {error}");
@@ -1126,6 +1144,7 @@ fn backend_build_command_in(
     cmd.env("CARGO_ENCODED_RUSTFLAGS", "");
     cmd.env_remove("RUSTFLAGS");
     cmd.env_remove("CARGO_BUILD_RUSTFLAGS");
+    cmd.env("RUSTC_BOOTSTRAP", "1");
 
     if platform::is_windows_target(host_target) {
         prefer_windows_lld_linker_for_backend(&mut cmd);
@@ -1583,7 +1602,13 @@ fn fetch_source_at_revision(
 /// Copies a freshly built backend into `cache_dir` and records the toolchain
 /// fingerprint and the source commit beside it.
 ///
-/// The fingerprint must be written whenever the backend is. A backend installed
+/// The `.so` is copied to a temporary file and renamed over the old one, so a
+/// `rustc` that already mapped the old file keeps reading it. On error the
+/// temporary file is removed and the old `.so` stays. A process killed between
+/// the copy and the rename leaves the temporary behind; `cargo oxide update`
+/// removes it (see [`remove_stranded_backend_temporaries`]).
+///
+/// The fingerprint must be written whenever the `.so` is. A `.so` installed
 /// without one falls back to the mtime checks, which cannot see a toolchain
 /// swap, so the next lookup would load a backend linked against the wrong
 /// `librustc_driver`. The commit record follows the same rule: written with
@@ -1608,14 +1633,39 @@ fn install_backend_into(
             (Ok(source), Ok(destination)) => source == destination,
             _ => false,
         };
-    // A failed copy must not retain an obsolete source revision.
-    record_source_rev(cache_dir, None);
     if !source_is_destination {
-        std::fs::copy(built_backend, &backend_path)?;
+        let temporary = temporary_backend_path(cache_dir);
+        if let Err(error) = std::fs::copy(built_backend, &temporary) {
+            let _ = std::fs::remove_file(&temporary);
+            return Err(error);
+        }
+        // Preserve the old binary and its source record until the copy succeeds.
+        // A failed rename leaves no record rather than naming the wrong backend.
+        record_source_rev(cache_dir, None);
+        if let Err(error) = std::fs::rename(&temporary, &backend_path) {
+            let _ = std::fs::remove_file(&temporary);
+            return Err(error);
+        }
     }
     write_toolchain_fingerprint(cache_dir, build_dir);
     record_source_rev(cache_dir, source_rev);
     Ok(backend_path)
+}
+
+/// A temporary name beside the `.so` (same filesystem, so the rename is
+/// atomic). The pid and a random part keep two installers apart.
+fn temporary_backend_path(cache_dir: &Path) -> PathBuf {
+    use std::hash::{BuildHasher, RandomState};
+    let nonce = RandomState::new().hash_one(());
+    cache_dir.join(format!(
+        "librustc_codegen_cuda.so.{}.{nonce:016x}.tmp",
+        std::process::id()
+    ))
+}
+
+/// True for the names [`temporary_backend_path`] produces.
+fn is_backend_temporary(name: &str) -> bool {
+    name.starts_with("librustc_codegen_cuda.so.") && name.ends_with(".tmp")
 }
 
 /// What [`publish_to_cache`] installed.
@@ -2244,6 +2294,24 @@ mod tests {
         );
     }
 
+    /// `clear_cache_contents` doubles as the automatic invalidation that any
+    /// project's lookup can run, possibly beside another project's installer,
+    /// so it leaves that installer's temporary alone. Only `cargo oxide
+    /// update` removes temporaries.
+    #[test]
+    fn clear_cache_contents_leaves_a_live_temporary_alone() {
+        let dir = tempdir();
+        let live = temporary_backend_path(&dir);
+        std::fs::write(&live, b"half-copied").unwrap();
+
+        clear_cache_contents(&dir, "librustc_codegen_cuda.so");
+
+        assert!(
+            live.exists(),
+            "an automatic invalidation must not remove another installer's temporary"
+        );
+    }
+
     /// A backend source input newer than the cached `.so` must report
     /// `StaleVsSource` (the "developer advanced the source" case that issue
     /// #49's binary check alone misses). To isolate the source signal from
@@ -2551,6 +2619,191 @@ mod tests {
 
         assert_eq!(installed, source);
         assert_eq!(std::fs::read(&installed).unwrap(), b"built");
+    }
+
+    /// The new backend is shorter, so an in-place rewrite would also truncate
+    /// the file under the open handle.
+    #[cfg(unix)]
+    #[test]
+    fn installing_leaves_a_loaded_backend_intact() {
+        use std::io::{Read, Seek};
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+
+        const OLD: &str = "old backend, longer than the new one";
+        const NEW: &str = "new backend";
+        let dir = tempdir();
+        let cache = dir.join("cache");
+        let old = dir.join("old.so");
+        let new = dir.join("new.so");
+        std::fs::write(&old, OLD).unwrap();
+        std::fs::write(&new, NEW).unwrap();
+        std::fs::set_permissions(&old, std::fs::Permissions::from_mode(0o644)).unwrap();
+        std::fs::set_permissions(&new, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let installed = install_backend_into(&cache, "librustc_codegen_cuda.so", &old, &dir, None)
+            .expect("install must succeed");
+        let mut loaded = std::fs::File::open(&installed).unwrap();
+        let mut seen = String::new();
+        loaded.read_to_string(&mut seen).unwrap();
+        assert_eq!(seen, OLD);
+
+        install_backend_into(&cache, "librustc_codegen_cuda.so", &new, &dir, None)
+            .expect("install must succeed");
+
+        seen.clear();
+        loaded.rewind().unwrap();
+        loaded.read_to_string(&mut seen).unwrap();
+        assert_eq!(
+            seen, OLD,
+            "a handle opened before the install must keep reading the old backend"
+        );
+        assert_eq!(
+            std::fs::read_to_string(&installed).unwrap(),
+            NEW,
+            "the path must yield the new backend"
+        );
+        let metadata = std::fs::metadata(&installed).unwrap();
+        assert_ne!(
+            metadata.ino(),
+            loaded.metadata().unwrap().ino(),
+            "the new backend must be a new file, not the old inode rewritten"
+        );
+        assert_eq!(
+            metadata.permissions().mode() & 0o777,
+            0o755,
+            "the installed backend must take the built file's mode"
+        );
+        // Closed first: a network filesystem keeps a replaced file under a
+        // hidden name while a handle to it is open.
+        drop(loaded);
+        assert_eq!(
+            unexpected_cache_entries(&cache),
+            Vec::<String>::new(),
+            "installing must not leave a temporary file in the cache"
+        );
+    }
+
+    /// The copy fails before anything in the cache changes, so the backend
+    /// and the commit recorded for it both stay.
+    #[test]
+    fn a_failed_install_keeps_the_cached_backend() {
+        let dir = tempdir();
+        let cache = dir.join("cache");
+        let source = dir.join("built.so");
+        std::fs::write(&source, b"built").unwrap();
+        let installed = install_backend_into(
+            &cache,
+            "librustc_codegen_cuda.so",
+            &source,
+            &dir,
+            Some("aaaa1111"),
+        )
+        .expect("install must succeed");
+
+        let error = install_backend_into(
+            &cache,
+            "librustc_codegen_cuda.so",
+            &dir.join("missing.so"),
+            &dir,
+            None,
+        )
+        .expect_err("installing a build that does not exist must fail");
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(
+            std::fs::read(&installed).unwrap(),
+            b"built",
+            "a failed install must keep the cached backend"
+        );
+        assert_eq!(
+            recorded_source_rev(&cache).as_deref(),
+            Some("aaaa1111"),
+            "a failed copy must keep the record of the backend that is still there"
+        );
+        assert_eq!(
+            unexpected_cache_entries(&cache),
+            Vec::<String>::new(),
+            "a failed install must not leave a temporary file in the cache"
+        );
+    }
+
+    /// A process killed between the copy and the rename leaves its temporary
+    /// behind. A later install leaves it alone, since it cannot tell it from
+    /// another installer's live copy; `cargo oxide update` removes it.
+    #[test]
+    fn update_removes_a_temporary_left_by_a_killed_install() {
+        let dir = tempdir();
+        let cache = dir.join("cache");
+        let source = dir.join("built.so");
+        std::fs::write(&source, b"built").unwrap();
+        let installed = install_backend_into(
+            &cache,
+            "librustc_codegen_cuda.so",
+            &source,
+            &dir,
+            Some("aaaa1111"),
+        )
+        .expect("install must succeed");
+        // One named by a process that is gone and one named by this process,
+        // so the sweep and the name policy are checked against each other.
+        let stranded = [
+            cache.join("librustc_codegen_cuda.so.1.00000000deadbeef.tmp"),
+            temporary_backend_path(&cache),
+        ];
+        for path in &stranded {
+            std::fs::write(path, b"half-copied").unwrap();
+        }
+
+        install_backend_into(
+            &cache,
+            "librustc_codegen_cuda.so",
+            &source,
+            &dir,
+            Some("aaaa1111"),
+        )
+        .expect("install must succeed");
+        for path in &stranded {
+            assert!(
+                path.exists(),
+                "an install must not remove what may be another installer's temporary"
+            );
+        }
+
+        remove_stranded_backend_temporaries(&cache);
+        for path in &stranded {
+            assert!(
+                !path.exists(),
+                "`cargo oxide update` must remove a stranded temporary"
+            );
+        }
+        assert_eq!(
+            std::fs::read(&installed).unwrap(),
+            b"built",
+            "the sweep must leave the backend alone"
+        );
+        assert_eq!(
+            recorded_source_rev(&cache).as_deref(),
+            Some("aaaa1111"),
+            "the sweep must leave the record alone"
+        );
+        assert_eq!(unexpected_cache_entries(&cache), Vec::<String>::new());
+    }
+
+    /// The backend's name is taken by a directory, so the rename fails.
+    #[test]
+    fn a_failed_rename_removes_the_temporary_copy() {
+        let dir = tempdir();
+        let cache = dir.join("cache");
+        std::fs::create_dir_all(cache.join("librustc_codegen_cuda.so").join("occupied")).unwrap();
+        let source = dir.join("built.so");
+        std::fs::write(&source, b"built").unwrap();
+
+        install_backend_into(&cache, "librustc_codegen_cuda.so", &source, &dir, None)
+            .expect_err("installing over a directory must fail");
+        assert_eq!(
+            unexpected_cache_entries(&cache),
+            Vec::<String>::new(),
+            "a failed install must not leave its temporary copy in the cache"
+        );
     }
 
     /// A cached `.so` whose recorded toolchain fingerprint differs from the
@@ -3278,5 +3531,21 @@ mod tests {
             .unwrap();
         f.write_all(contents).unwrap();
         f.set_modified(mtime).unwrap();
+    }
+
+    /// Names in `cache` other than the backend and the two records beside it.
+    fn unexpected_cache_entries(cache: &Path) -> Vec<String> {
+        let known = [
+            "librustc_codegen_cuda.so",
+            TOOLCHAIN_FINGERPRINT_FILE,
+            SOURCE_REV_FILE,
+        ];
+        let mut names = std::fs::read_dir(cache)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+            .filter(|name| !known.contains(&name.as_str()))
+            .collect::<Vec<_>>();
+        names.sort();
+        names
     }
 }

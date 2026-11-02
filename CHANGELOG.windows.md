@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### 2026-11-02
+
+- Merged 89 upstream commits through `cced2a35b`, including CUDA-Oxide 0.3.0,
+  shared host crates 0.5.0, the unified async runtime, and the CuTe preview.
+- Pinned the host, SIMT, Tile, and CI compiler environments to Rust 1.99.1.
+- Preserved MSVC ABI conversions, COFF embedding, DLL discovery, and pinned
+  fork scaffolds while adopting upstream's backend cache publication fix.
+- Adapted the new archive extraction, PTX output validation, license guards,
+  and platform-specific tests for Windows.
+- Verified native `vecadd` execution on RTX 4080: 1024 of 1024 values correct.
+
+### Previous updates
+
 - Included upstream's umbrella documentation, shared contribution guide,
   reference-parameter ABI attributes, and sparse FP8 metadata fix.
 - Kept stable Rust 1.99 compatibility after upstream moved to a dated nightly.

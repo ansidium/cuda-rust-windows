@@ -4,7 +4,7 @@ error[E0133]: call to unsafe function `LoadedModule::uncontracted` is unsafe and
 17 | /     module
 18 | |         .uncontracted(
 19 | |             stream,
-20 | |             cuda_core::simt::LaunchConfig {
+20 | |             cuda_core::LaunchConfig {
 ...  |
 25 | |             7,
 26 | |         )
