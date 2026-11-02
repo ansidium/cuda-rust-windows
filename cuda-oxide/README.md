@@ -174,7 +174,7 @@ cargo +1.99.1 install --locked --path crates/cargo-oxide
 For use outside the repository, install the pinned fork CLI:
 
 ```bash
-cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev acc0f43960fe9a575f10ddef26dd82255400c23d cargo-oxide
+cargo +1.99.1 install --locked --git https://github.com/ansidium/cuda-rust-windows.git --rev cd4bb9e265b51f424ba9de718c0980316ea97925 cargo-oxide
 ```
 
 On first run, `cargo-oxide` will automatically fetch and build the codegen backend.
