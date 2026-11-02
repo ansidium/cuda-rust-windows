@@ -9,7 +9,7 @@ import os
 project = 'CUDA Rust Windows'
 copyright = '2026, NVIDIA Corporation'
 author = 'NVIDIA Corporation'
-release = os.environ.get('CUDA_RUST_DOCS_VERSION', '0.1.0')
+release = os.environ.get('CUDA_RUST_DOCS_VERSION', 'main')
 version = release
 
 extensions = [

@@ -10,7 +10,7 @@ import os
 project = 'cuTile Rust'
 copyright = '2025-2026, NVIDIA Corporation'
 author = 'NVIDIA Corporation'
-release = os.environ.get('CUTILE_DOCS_VERSION', '0.1.0')
+release = os.environ.get('CUTILE_DOCS_VERSION', 'main')
 version = release
 
 # -- General configuration ---------------------------------------------------
