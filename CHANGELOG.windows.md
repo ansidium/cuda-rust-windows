@@ -11,6 +11,8 @@
   fork scaffolds while adopting upstream's backend cache publication fix.
 - Adapted the new archive extraction, PTX output validation, license guards,
   and platform-specific tests for Windows.
+- Refreshed standalone example lockfiles and made the CuTe comparison
+  dispatch tests run on Windows as well as Unix.
 - Verified native `vecadd` execution on RTX 4080: 1024 of 1024 values correct.
 
 ### Previous updates

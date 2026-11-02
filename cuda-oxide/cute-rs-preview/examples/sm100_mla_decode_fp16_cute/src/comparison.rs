@@ -86,12 +86,17 @@ fn run(command: &mut Command) -> super::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{fs, os::unix::fs::PermissionsExt};
+    use std::fs;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
 
     /// Temporary executable that records arguments and simulates a comparison exit status.
     struct FakePython {
         /// Private temporary directory holding reference placeholders, the executable and captured arguments.
         directory: PathBuf,
+        /// Platform-specific recording executable stored in the private temporary directory.
+        /// Windows launches a batch file; Unix uses an executable shell script.
+        python: PathBuf,
     }
 
     impl FakePython {
@@ -107,21 +112,30 @@ mod tests {
             fs::create_dir(&directory).unwrap();
             fs::create_dir(directory.join("reference")).unwrap();
             fs::write(directory.join("compare.py"), b"").unwrap();
-            let python = directory.join("python");
+            let python = directory.join(if cfg!(windows) {
+                "python.cmd"
+            } else {
+                "python"
+            });
             fs::write(
                 &python,
-                "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$COMPARISON_ARGUMENTS\"\nexit \"${COMPARISON_EXIT:-0}\"\n",
+                if cfg!(windows) {
+                    "@echo off\r\nsetlocal\r\ntype nul > \"%COMPARISON_ARGUMENTS%\"\r\n:record\r\nif \"%~1\"==\"\" goto done\r\n>> \"%COMPARISON_ARGUMENTS%\" echo(%~1\r\nshift\r\ngoto record\r\n:done\r\nif not defined COMPARISON_EXIT set COMPARISON_EXIT=0\r\nexit /b %COMPARISON_EXIT%\r\n"
+                } else {
+                    "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$COMPARISON_ARGUMENTS\"\nexit \"${COMPARISON_EXIT:-0}\"\n"
+                },
             )
             .unwrap();
-            fs::set_permissions(python, fs::Permissions::from_mode(0o755)).unwrap();
-            Self { directory }
+            #[cfg(unix)]
+            fs::set_permissions(&python, fs::Permissions::from_mode(0o755)).unwrap();
+            Self { directory, python }
         }
 
         /// Build a comparison command whose simulated interpreter records every argument.
         fn command(&self, arguments: &[OsString]) -> Command {
             let mut command = comparison_command(
                 &self.directory,
-                &self.directory.join("python"),
+                &self.python,
                 Path::new("/path to/running-binary"),
                 arguments,
             )
@@ -160,7 +174,7 @@ mod tests {
         run(&mut python.command(&arguments)).unwrap();
         let passed = fs::read_to_string(python.directory.join("arguments")).unwrap();
         let passed: Vec<_> = passed.lines().collect();
-        assert!(passed[0].ends_with("/compare.py"));
+        assert!(Path::new(passed[0]).ends_with("compare.py"));
         assert_eq!(
             &passed[1..],
             &[
