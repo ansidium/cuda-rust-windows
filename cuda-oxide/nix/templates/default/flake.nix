@@ -7,7 +7,7 @@
   description = "A cuda-oxide project";
 
   inputs = {
-    cuda-oxide.url = "github:ansidium/cuda-rust-windows/a98edeff9fd45f5f8baace02840539841693e700?dir=cuda-oxide";
+    cuda-oxide.url = "github:ansidium/cuda-rust-windows/2eb0611041c5665008e7804cc282d8927d08afd1?dir=cuda-oxide";
     # Reuse the development shell's inputs to avoid duplicate closures.
     nixpkgs.follows = "cuda-oxide/nixpkgs";
     flake-utils.follows = "cuda-oxide/flake-utils";
