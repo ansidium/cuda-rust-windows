@@ -41,6 +41,7 @@ mod backend_source;
 mod commands;
 mod cutlass_toolchain;
 mod platform;
+mod windows_release;
 
 /// Top-level CLI structure parsed by clap.
 ///
@@ -532,6 +533,17 @@ enum Commands {
         #[command(subcommand)]
         command: ToolchainCommand,
     },
+    /// Install or update the signed Windows distribution
+    Windows {
+        #[arg(value_enum)]
+        action: windows_release::Action,
+        /// Select a published version instead of the default
+        #[arg(long)]
+        version: Option<String>,
+        /// Verify and save the installer without opening its wizard
+        #[arg(long)]
+        download_only: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -704,6 +716,10 @@ fn validate_materialization_cli(cli: &Cli) -> Result<(), String> {
         ),
         Commands::Toolchain { .. } => Err(
             "--materialize-cubin cannot be used with toolchain because toolchain manages compiler installations"
+                .to_string(),
+        ),
+        Commands::Windows { .. } => Err(
+            "--materialize-cubin cannot be used with windows because windows manages installations"
                 .to_string(),
         ),
         Commands::MaterializerHandshake => Err(
@@ -1236,6 +1252,16 @@ fn main() {
                 }
             },
         },
+        Commands::Windows {
+            action,
+            version,
+            download_only,
+        } => {
+            if let Err(error) = windows_release::run(action, version.as_deref(), download_only) {
+                eprintln!("Error: {error}");
+                std::process::exit(1);
+            }
+        }
     }
 }
 
@@ -1366,6 +1392,24 @@ mod tests {
                 }
             }
         ));
+    }
+
+    #[test]
+    fn windows_release_commands_parse_without_a_project() {
+        let cli = Cli::try_parse_from([
+            "cargo-oxide",
+            "windows",
+            "update",
+            "--version",
+            "0.4.0",
+            "--download-only",
+        ])
+        .expect("versioned Windows release command");
+        assert!(matches!(cli.command, Commands::Windows {
+            action: windows_release::Action::Update, version: Some(ref version), download_only: true,
+        } if version == "0.4.0"));
+        assert!(Cli::try_parse_from(["cargo-oxide", "windows", "delete"]).is_err());
+        assert!(Cli::try_parse_from(["cargo-oxide", "windows"]).is_err());
     }
 
     #[test]

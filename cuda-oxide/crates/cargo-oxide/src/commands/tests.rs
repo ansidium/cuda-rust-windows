@@ -6096,6 +6096,141 @@ fn non_full_codegen_profiles_do_not_activate_the_targeted_debug_cfg() {
 // doctor: "Backend source (cuda-oxide commit)" line
 // ---------------------------------------------------------------------------
 
+#[test]
+fn doctor_packaged_backend_does_not_recommend_replacing_an_older_cache() {
+    let root = unique_temp_dir("cargo_oxide_doctor_packaged_cache");
+    let package = root.join("release");
+    fs::create_dir_all(&package).unwrap();
+    let executable = package.join("cargo-oxide.exe");
+    let packaged = package.join("rustc_codegen_cuda.dll");
+    let cached = root.join("cached.dll");
+    fs::write(&packaged, b"packaged backend").unwrap();
+    fs::write(&cached, b"older cached backend").unwrap();
+    let old = std::time::SystemTime::now() - std::time::Duration::from_secs(3600);
+    fs::File::options()
+        .write(true)
+        .open(&cached)
+        .unwrap()
+        .set_modified(old)
+        .unwrap();
+
+    let selected = doctor_backend_selection(&packaged, Some(&executable), false, Some(&cached));
+    assert_eq!(selected, DoctorBackendSelection::Packaged);
+    let check = doctor_shared_cache_check(&packaged, Some(&cached), selected);
+    assert!(check.headline.contains("shared source cache bypassed"));
+    assert!(check.details.is_empty());
+    assert!(!check.failed);
+
+    // The same age difference is still actionable for an ordinary local build.
+    let check =
+        doctor_shared_cache_check(&packaged, Some(&cached), DoctorBackendSelection::Automatic);
+    assert!(
+        check
+            .details
+            .iter()
+            .any(|line| line.contains("cargo oxide setup"))
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn doctor_explicit_pin_outranks_package_and_missing_package_is_not_selected() {
+    let root = unique_temp_dir("cargo_oxide_doctor_backend_selection");
+    fs::create_dir_all(&root).unwrap();
+    let executable = root.join("cargo-oxide.exe");
+    let packaged = root.join("rustc_codegen_cuda.dll");
+    fs::write(&packaged, b"packaged backend").unwrap();
+    assert_eq!(
+        doctor_backend_selection(&packaged, Some(&executable), true, None),
+        DoctorBackendSelection::Pinned
+    );
+    let check = doctor_shared_cache_check(&packaged, None, DoctorBackendSelection::Pinned);
+    assert!(check.headline.contains("explicit backend pin"));
+    assert!(check.details.is_empty());
+    assert_eq!(
+        doctor_backend_selection(
+            &packaged,
+            Some(&root.join("other/cargo-oxide.exe")),
+            false,
+            None
+        ),
+        DoctorBackendSelection::Automatic
+    );
+    fs::remove_file(&packaged).unwrap();
+    assert_eq!(
+        doctor_backend_selection(&packaged, Some(&executable), false, None),
+        DoctorBackendSelection::Automatic
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn doctor_release_cache_bypasses_older_shared_backend() {
+    let root = unique_temp_dir("cargo_oxide_doctor_release_cache");
+    let shared = root.join("rustc_codegen_cuda.dll");
+    let release = root
+        .join("releases")
+        .join(env!("CARGO_PKG_VERSION"))
+        .join("rustc_codegen_cuda.dll");
+    fs::create_dir_all(release.parent().unwrap()).unwrap();
+    fs::write(&shared, b"old source build").unwrap();
+    fs::write(&release, b"release backend").unwrap();
+    fs::File::options()
+        .write(true)
+        .open(&shared)
+        .unwrap()
+        .set_modified(std::time::SystemTime::now() - std::time::Duration::from_secs(3600))
+        .unwrap();
+    let selected = doctor_backend_selection(&release, None, false, Some(&shared));
+    assert_eq!(selected, DoctorBackendSelection::ReleaseCache);
+    let check = doctor_shared_cache_check(&release, Some(&shared), selected);
+    assert!(check.headline.contains("shared source cache bypassed"));
+    assert!(check.details.is_empty());
+    assert!(!check.failed);
+    assert_eq!(
+        doctor_backend_selection(&release, None, true, Some(&shared)),
+        DoctorBackendSelection::Pinned
+    );
+    // A different cache root does not establish release provenance.
+    assert_eq!(
+        doctor_backend_selection(&release, None, false, Some(&root.join("other/backend.dll"))),
+        DoctorBackendSelection::Automatic
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn doctor_missing_release_manifest_fails_windows_preflight_except_manual_pins() {
+    let root = unique_temp_dir("cargo_oxide_doctor_release_manifest");
+    fs::create_dir_all(&root).unwrap();
+    let backend = root.join("rustc_codegen_cuda.dll");
+    fs::write(&backend, b"release backend").unwrap();
+    for selection in [
+        DoctorBackendSelection::Packaged,
+        DoctorBackendSelection::ReleaseCache,
+    ] {
+        let check = doctor_release_manifest_check(&backend, selection, true).unwrap();
+        assert!(check.failed);
+        assert!(check.headline.contains("release-manifest.ps1"));
+        assert!(doctor_release_manifest_check(&backend, selection, false).is_none());
+    }
+    assert!(
+        doctor_release_manifest_check(&backend, DoctorBackendSelection::Pinned, true).is_none()
+    );
+    assert!(
+        doctor_release_manifest_check(&backend, DoctorBackendSelection::Automatic, true).is_none()
+    );
+    fs::write(
+        root.join("release-manifest.ps1"),
+        b"presence only; not verified here",
+    )
+    .unwrap();
+    assert!(
+        doctor_release_manifest_check(&backend, DoctorBackendSelection::Packaged, true).is_none()
+    );
+    fs::remove_dir_all(root).unwrap();
+}
+
 /// Every branch of the backend-source line, from the resolved dependency and
 /// the commit recorded in the shared cache. The line is informational, so no
 /// branch may flip doctor's exit status.

@@ -1,0 +1,2643 @@
+{
+  "target": "x86_64-pc-windows-msvc",
+  "lockfiles": [
+    {
+      "path": "cuda-oxide/Cargo.lock",
+      "sha256": "ed3220dfe40dcc7728e353956d819a7518a24a45345a1beed3ac03e9a4bfbd80"
+    },
+    {
+      "path": "cuda-oxide/crates/rustc-codegen-cuda/Cargo.lock",
+      "sha256": "e22aaddc04c9507f5de5d2fb927ce1f7487ff90224f7f8a0354a4a4e0466c0c0"
+    }
+  ],
+  "packages": [
+    {
+      "name": "aho-corasick",
+      "version": "1.1.4",
+      "license": "Unlicense OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/BurntSushi/aho-corasick",
+      "authors": [
+        "Andrew Gallant <jamslam@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "COPYING",
+          "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+        }
+      ]
+    },
+    {
+      "name": "allocator-api2",
+      "version": "0.2.21",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/zakarumych/allocator-api2",
+      "authors": [
+        "Zakarum <zaq.dev@icloud.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "20fe7b00e904ed690e3b9fd6073784d3fc428141dbd10b81c01fd143d0797f58"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "36516aefdc84c5d5a1e7485425913a22dbda69eb1930c5e84d6ae4972b5194b9"
+        }
+      ]
+    },
+    {
+      "name": "anstream",
+      "version": "1.0.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "anstyle",
+      "version": "1.0.14",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "anstyle-parse",
+      "version": "1.0.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "anstyle-query",
+      "version": "1.1.5",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "anstyle-wincon",
+      "version": "3.0.11",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "anyhow",
+      "version": "1.0.100",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/anyhow",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "arrayvec",
+      "version": "0.7.8",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/bluss/arrayvec",
+      "authors": [
+        "bluss"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "4da95ec4ecb65b738d470b7d762894ad9c97da93e6cbfb18b570fc2c96f4b871"
+        }
+      ]
+    },
+    {
+      "name": "awint",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "awint_core",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "awint_ext",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "awint_internals",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "awint_macro_internals",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "awint_macros",
+      "version": "0.19.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/awint",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "bitflags",
+      "version": "2.13.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/bitflags/bitflags",
+      "authors": [
+        "The Rust Project Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+        }
+      ]
+    },
+    {
+      "name": "block-buffer",
+      "version": "0.10.4",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/RustCrypto/utils",
+      "authors": [
+        "RustCrypto Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "d5c22aa3118d240e877ad41c5d9fa232f9c77d757d4aac0c2f943afc0a95e0ef"
+        }
+      ]
+    },
+    {
+      "name": "bytemuck",
+      "version": "1.25.0",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Lokathor/bytemuck",
+      "authors": [
+        "Lokathor <zefria@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "9df9ba60a11af705f2e451b53762686e615d86f76b169cf075c3237730dbd7e2"
+        },
+        {
+          "path": "LICENSE-ZLIB",
+          "sha256": "84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151"
+        }
+      ]
+    },
+    {
+      "name": "bytes",
+      "version": "1.11.1",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/tokio-rs/bytes",
+      "authors": [
+        "Carl Lerche <me@carllerche.com>",
+        "Sean McArthur <sean@seanmonstar.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "45f522cacecb1023856e46df79ca625dfc550c94910078bd8aec6e02880b3d42"
+        }
+      ]
+    },
+    {
+      "name": "cfg-if",
+      "version": "1.0.4",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/cfg-if",
+      "authors": [
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        }
+      ]
+    },
+    {
+      "name": "clap",
+      "version": "4.6.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/clap-rs/clap",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "clap_builder",
+      "version": "4.6.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/clap-rs/clap",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "clap_derive",
+      "version": "4.6.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/clap-rs/clap",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "clap_lex",
+      "version": "1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/clap-rs/clap",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "colorchoice",
+      "version": "1.0.5",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-cli/anstyle.git",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "combine",
+      "version": "4.6.8",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Marwes/combine",
+      "authors": [
+        "Markus Westerlind <marwes91@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "9bbc1b3dc4674a9ebb12c2a62f54fe3c08672539717f8d05828f684b6cc419a3"
+        }
+      ]
+    },
+    {
+      "name": "const_fn",
+      "version": "0.4.11",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/taiki-e/const_fn",
+      "authors": [],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "const_fn",
+      "version": "0.4.12",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/taiki-e/const_fn",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "convert_case",
+      "version": "0.12.0",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rutrum/convert-case",
+      "authors": [
+        "rutrum <dave@rutrum.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "aed7b1758e35afa0cd0fde059d61950747ca11cd0e5e169cb21c11608daed772"
+        }
+      ]
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.2.17",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/RustCrypto/utils",
+      "authors": [
+        "RustCrypto Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "ae9baa7beea910273c2f384c2a6b721fb7bd02bda3436074a1072e4ee689f985"
+        }
+      ]
+    },
+    {
+      "name": "crc32fast",
+      "version": "1.5.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/srijs/rust-crc32fast",
+      "authors": [
+        "Sam Rijs <srijs@airpost.net>",
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "61d383b05b87d78f94d2937e2580cce47226d17823c0430fbcad09596537efcf"
+        }
+      ]
+    },
+    {
+      "name": "crypto-common",
+      "version": "0.1.7",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/RustCrypto/traits",
+      "authors": [
+        "RustCrypto Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "3521672491a3479422d5fe1aca6645dd2984090f85da6e5205abfb18fb7a6897"
+        }
+      ]
+    },
+    {
+      "name": "digest",
+      "version": "0.10.7",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/RustCrypto/traits",
+      "authors": [
+        "RustCrypto Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "9e0dfd2dd4173a530e238cb6adb37aa78c34c6bc7444e0e10c1ab5d8881f63ba"
+        }
+      ]
+    },
+    {
+      "name": "downcast-rs",
+      "version": "2.0.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/marcianx/downcast-rs",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "fb252fecf98d9af8f1d9201c5860319a514f5a8a24700dc84fc6ea287a7a4958"
+        }
+      ]
+    },
+    {
+      "name": "dyn-clone",
+      "version": "1.0.20",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/dyn-clone",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "equivalent",
+      "version": "1.0.2",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/indexmap-rs/equivalent",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "7365cc8878a1d7ce155a58c4ca09c3d7a6be413efa5334a80ea842912b669349"
+        }
+      ]
+    },
+    {
+      "name": "fastrand",
+      "version": "2.5.0",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/smol-rs/fastrand",
+      "authors": [
+        "Stjepan Glavina <stjepang@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "foldhash",
+      "version": "0.1.5",
+      "license": "Zlib",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/orlp/foldhash",
+      "authors": [
+        "Orson Peters <orsonpeters@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b1181a40b2a7b25cf66fd01481713bc1005df082c53ef73e851e55071b102744"
+        }
+      ]
+    },
+    {
+      "name": "foldhash",
+      "version": "0.2.0",
+      "license": "Zlib",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/orlp/foldhash",
+      "authors": [
+        "Orson Peters <orsonpeters@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b1181a40b2a7b25cf66fd01481713bc1005df082c53ef73e851e55071b102744"
+        }
+      ]
+    },
+    {
+      "name": "generic-array",
+      "version": "0.14.7",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/fizyk20/generic-array.git",
+      "authors": [
+        "Bartłomiej Kamiński <fizyk20@gmail.com>",
+        "Aaron Trent <novacrazy@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "c09aae9d3c77b531f56351a9947bc7446511d6b025b3255312d3e3442a9a7583"
+        }
+      ]
+    },
+    {
+      "name": "getrandom",
+      "version": "0.4.3",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-random/getrandom",
+      "authors": [
+        "The Rand Project Developers"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "aaff376532ea30a0cd5330b9502ad4a4c8bf769c539c87ffe78819d188a18ebf"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "523a42c25d245dde9c015f882cec7f4555aad883382a6cf19b4b7d9b2cd5419b"
+        }
+      ]
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.15.5",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/hashbrown",
+      "authors": [
+        "Amanieu d'Antras <amanieu@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "ff8f68cb076caf8cefe7a6430d4ac086ce6af2ca8ce2c4e5a2004d4552ef52a2"
+        }
+      ]
+    },
+    {
+      "name": "hashbrown",
+      "version": "0.17.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/hashbrown",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "ff8f68cb076caf8cefe7a6430d4ac086ce6af2ca8ce2c4e5a2004d4552ef52a2"
+        }
+      ]
+    },
+    {
+      "name": "heck",
+      "version": "0.5.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/withoutboats/heck",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0"
+        }
+      ]
+    },
+    {
+      "name": "hi_sparse_bitset",
+      "version": "0.10.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/tower120/hi_sparse_bitset",
+      "authors": [
+        "Andrey Didukh <tower120@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "ec1981d6135d49c18b8f9ed1626966c6fd168c5072eadbb4ad65dc746520e388"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "da91ce742c71b1cfecbe5256ca79dc2665b82f88533fc7facc3da26ea969d5d7"
+        }
+      ]
+    },
+    {
+      "name": "indexmap",
+      "version": "2.14.2",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/indexmap-rs/indexmap",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "ecc269ef87fd38a1d98e30bfac9ba964a9dbd9315c3770fed98d4d7cb5882055"
+        }
+      ]
+    },
+    {
+      "name": "is_terminal_polyfill",
+      "version": "1.70.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/polyfill-rs/is_terminal_polyfill",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "itoa",
+      "version": "1.0.18",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/itoa",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "libloading",
+      "version": "0.8.9",
+      "license": "ISC",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/nagisa/rust_libloading/",
+      "authors": [
+        "Simonas Kazlauskas <libloading@kazlauskas.me>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "b29f8b01452350c20dd1af16ef83b598fea3053578ccc1c7a0ef40e57be2620f"
+        }
+      ]
+    },
+    {
+      "name": "linkme",
+      "version": "0.3.37",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/linkme",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "linkme-impl",
+      "version": "0.3.37",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/linkme",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "lock_api",
+      "version": "0.4.14",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "authors": [
+        "Amanieu d'Antras <amanieu@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "c9a75f18b9ab2927829a208fc6aa2cf4e63b8420887ba29cdb265d6619ae82d5"
+        }
+      ]
+    },
+    {
+      "name": "log",
+      "version": "0.4.34",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/log",
+      "authors": [
+        "The Rust Project Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+        }
+      ]
+    },
+    {
+      "name": "memchr",
+      "version": "2.7.6",
+      "license": "Unlicense OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/BurntSushi/memchr",
+      "authors": [
+        "Andrew Gallant <jamslam@gmail.com>",
+        "bluss"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "COPYING",
+          "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+        }
+      ]
+    },
+    {
+      "name": "memchr",
+      "version": "2.8.0",
+      "license": "Unlicense OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/BurntSushi/memchr",
+      "authors": [
+        "Andrew Gallant <jamslam@gmail.com>",
+        "bluss"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "COPYING",
+          "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+        }
+      ]
+    },
+    {
+      "name": "object",
+      "version": "0.36.7",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/gimli-rs/object",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0b74dfa0bcee5c420c6b7f67b4b2658f9ab8388c97b8e733975f2cecbdd668a6"
+        }
+      ]
+    },
+    {
+      "name": "once_cell",
+      "version": "1.21.3",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/matklad/once_cell",
+      "authors": [
+        "Aleksey Kladov <aleksey.kladov@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "once_cell_polyfill",
+      "version": "1.70.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/polyfill-rs/once_cell_polyfill",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "once_vec",
+      "version": "0.4.0",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/vaivaswatha/once_vec",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "name": "oxide-artifacts",
+      "version": "0.2.1",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/NVlabs/cuda-oxide.git",
+      "authors": [
+        "Nihal Pasham <nihalp@nvidia.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [],
+      "license_fallback": {
+        "license": "Apache-2.0",
+        "origin": "repository LICENSE; NVIDIA copyright header omitted for utf8-chars",
+        "sha256": "fcd7f4edc6be93f37717add43dcb2617812d74536c6717b57028234b19a6d1db"
+      }
+    },
+    {
+      "name": "pliron",
+      "version": "0.20.0",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/pliron-org/pliron",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "4f86ad10a7abb670af6ad2e7adafdb10e96d855beba933b36de2d763d85dc2e8"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "416f25d587308a3ae3070e95544fb12fe964e544cf7cffe82160cab948dc2fca"
+        }
+      ]
+    },
+    {
+      "name": "pliron-derive",
+      "version": "0.20.0",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/pliron-org/pliron",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "4f86ad10a7abb670af6ad2e7adafdb10e96d855beba933b36de2d763d85dc2e8"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "416f25d587308a3ae3070e95544fb12fe964e544cf7cffe82160cab948dc2fca"
+        }
+      ]
+    },
+    {
+      "name": "pliron-llvm",
+      "version": "0.20.0",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/pliron-org/pliron",
+      "authors": [],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE.md",
+          "sha256": "4f86ad10a7abb670af6ad2e7adafdb10e96d855beba933b36de2d763d85dc2e8"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "416f25d587308a3ae3070e95544fb12fe964e544cf7cffe82160cab948dc2fca"
+        }
+      ]
+    },
+    {
+      "name": "pliron-mlir-interop",
+      "version": "0.1.0",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/pliron-org/pliron-mlir-interop",
+      "authors": [],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "1a4d1a006584e9852eeefa11f5ff6b00a228e7d9feef88dd511184a56a79bb26"
+        },
+        {
+          "path": "NOTICE",
+          "sha256": "e9a4a31ced2003f09c32fe1a34644601d5e43f17f1618e50a121443c871ed296"
+        }
+      ]
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/proc-macro2",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>",
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "quote",
+      "version": "1.0.47",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/quote",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "recasting",
+      "version": "0.2.3",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/recasting",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0fb9a918700c99457aa83a0ff99e14584cac5ece5cc9faa7c584dba17579ffe5"
+        }
+      ]
+    },
+    {
+      "name": "regex",
+      "version": "1.13.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/regex",
+      "authors": [
+        "The Rust Project Developers",
+        "Andrew Gallant <jamslam@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+        }
+      ]
+    },
+    {
+      "name": "regex-automata",
+      "version": "0.4.18",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/regex",
+      "authors": [
+        "The Rust Project Developers",
+        "Andrew Gallant <jamslam@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+        }
+      ]
+    },
+    {
+      "name": "regex-syntax",
+      "version": "0.8.11",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/regex",
+      "authors": [
+        "The Rust Project Developers",
+        "Andrew Gallant <jamslam@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+        }
+      ]
+    },
+    {
+      "name": "rustc-demangle",
+      "version": "0.1.28",
+      "license": "MIT/Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/rustc-demangle",
+      "authors": [
+        "Alex Crichton <alex@alexcrichton.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+        }
+      ]
+    },
+    {
+      "name": "rustc-hash",
+      "version": "2.1.3",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/rustc-hash",
+      "authors": [
+        "The Rust Project Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "95bd3988beee069fa2848f648dab43cc6e0b2add2ad6bcb17360caf749802bcc"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+        }
+      ]
+    },
+    {
+      "name": "rustc_apfloat",
+      "version": "0.2.3+llvm-462a31f5a5ab",
+      "license": "Apache-2.0 WITH LLVM-exception",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rust-lang/rustc_apfloat",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-DETAILS.md",
+          "sha256": "5998f303e26191363f591e04bdd0f829b2000afc843c67326a9b7efd66850416"
+        },
+        {
+          "path": "LICENSE.txt",
+          "sha256": "981f4155fbd55dcf13745e2ed508e6fa30aa90f9f668c4ef0f7686980e5d8521"
+        }
+      ]
+    },
+    {
+      "name": "safe_arch",
+      "version": "1.2.0",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Lokathor/safe_arch",
+      "authors": [
+        "Lokathor <zefria@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE.md",
+          "sha256": "e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb"
+        },
+        {
+          "path": "LICENSE-MIT.md",
+          "sha256": "e57011537d230b14e790f6666dc00816f7b371ebbd7da8a12491e51086fec278"
+        },
+        {
+          "path": "LICENSE-ZLIB.md",
+          "sha256": "c43b9a9b1387ed53d2c49263838261129a010e280e3a174a792242c3e2c98db9"
+        }
+      ]
+    },
+    {
+      "name": "scopeguard",
+      "version": "1.2.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/bluss/scopeguard",
+      "authors": [
+        "bluss"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "fb77f0a9c53e473abe5103c8632ef9f0f2874d4fb3f17cb2d8c661aab9cee9d7"
+        }
+      ]
+    },
+    {
+      "name": "serde",
+      "version": "1.0.228",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.228",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.228",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/serde",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.149",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/json",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.151",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/serde-rs/json",
+      "authors": [
+        "Erick Tryzelaar <erick.tryzelaar@gmail.com>",
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "serde_spanned",
+      "version": "1.1.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "sha2",
+      "version": "0.10.9",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/RustCrypto/hashes",
+      "authors": [
+        "RustCrypto Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a9040321c3712d8fd0b09cf52b17445de04a23a10165049ae187cd39e5c86be5"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "b4eb00df6e2a4d22518fcaa6a2b4646f249b3a3c9814509b22bd2091f1392ff1"
+        }
+      ]
+    },
+    {
+      "name": "slotmap",
+      "version": "1.1.1",
+      "license": "Zlib",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/orlp/slotmap",
+      "authors": [
+        "Orson Peters <orsonpeters@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "6cec81441b2ab2b5090954c1fb5d0bcca81b86487b5849061fa8952d20ef67d4"
+        }
+      ]
+    },
+    {
+      "name": "smallvec",
+      "version": "1.16.3",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/servo/rust-smallvec",
+      "authors": [
+        "The Servo Project Developers"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9"
+        }
+      ]
+    },
+    {
+      "name": "spin",
+      "version": "0.12.3",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://codeberg.org/zesterer/spin",
+      "authors": [
+        "Mathijs van de Nes <git@mathijs.vd-nes.nl>",
+        "John Ericson <git@JohnEricson.me>",
+        "Joshua Barretto <joshua.s.barretto@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "6ac8711fb340c62ce0a4ecd463342d3fa0e8e70de697c863a2e1c0c53006003c"
+        }
+      ]
+    },
+    {
+      "name": "strsim",
+      "version": "0.11.1",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/rapidfuzz/strsim-rs",
+      "authors": [
+        "Danny Guo <danny@dannyguo.com>",
+        "maxbachmann <oss@maxbachmann.de>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "1e697ce8d21401fbf1bddd9b5c3fd4c4c79ae1e3bdf51f81761c85e11d5a89cd"
+        }
+      ]
+    },
+    {
+      "name": "syn",
+      "version": "2.0.117",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/syn",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "syn",
+      "version": "3.0.9",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/syn",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "tempfile",
+      "version": "3.27.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Stebalien/tempfile",
+      "authors": [
+        "Steven Allen <steven@stebalien.com>",
+        "The Rust Project Developers",
+        "Ashley Mannix <ashleymannix@live.com.au>",
+        "Jason White <me@jasonwhite.io>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "8b427f5bc501764575e52ba4f9d95673cf8f6d80a86d0d06599852e1a9a20a36"
+        }
+      ]
+    },
+    {
+      "name": "thiserror",
+      "version": "2.0.21",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/thiserror",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "thiserror-impl",
+      "version": "2.0.21",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/thiserror",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "toml",
+      "version": "1.1.2+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_datetime",
+      "version": "1.1.1+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_parser",
+      "version": "1.1.2+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "toml_writer",
+      "version": "1.1.1+spec-1.1.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/toml-rs/toml",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "6efb0476a1cc085077ed49357026d8c173bf33017278ef440f222fb9cbcb66e6"
+        }
+      ]
+    },
+    {
+      "name": "triple_arena",
+      "version": "0.15.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/AaronKutch/triple_arena",
+      "authors": [
+        "Aaron Kutch <aaronkutch@att.net>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "5c71280e740d267af8fcd1928b7dba351a8fcbc8454b7674dfdb43e234df4e12"
+        }
+      ]
+    },
+    {
+      "name": "typenum",
+      "version": "1.20.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/paholg/typenum",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE",
+          "sha256": "db11fec9946737df39ca3898d9cd8c10ec6f6c3a884a6802b0ad0b81b4e8f23a"
+        },
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "516b24e051bf5630880ebbd55c40a25ce9552ebaf8970a53e8976eb70e522406"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "a825bd853ab71619a4923d7b4311221427848070ff44d990da39b0b274c1683f"
+        }
+      ]
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.22",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "LICENSE-UNICODE",
+          "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+        }
+      ]
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.24",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        },
+        {
+          "path": "LICENSE-UNICODE",
+          "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+        }
+      ]
+    },
+    {
+      "name": "unicode-segmentation",
+      "version": "1.12.0",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/unicode-rs/unicode-segmentation",
+      "authors": [
+        "kwantam <kwantam@gmail.com>",
+        "Manish Goregaokar <manishsmail@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "COPYRIGHT",
+          "sha256": "23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d"
+        },
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0"
+        }
+      ]
+    },
+    {
+      "name": "unicode-segmentation",
+      "version": "1.13.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/unicode-rs/unicode-segmentation",
+      "authors": [
+        "kwantam <kwantam@gmail.com>",
+        "Manish Goregaokar <manishsmail@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "COPYRIGHT",
+          "sha256": "23860c2a7b5d96b21569afedf033469bab9fe14a1b24a35068b8641c578ce24d"
+        },
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "7b63ecd5f1902af1b63729947373683c32745c16a10e8e6292e2e2dcd7e90ae0"
+        }
+      ]
+    },
+    {
+      "name": "utf8-chars",
+      "version": "3.0.7",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/A1-Triard/utf8-chars",
+      "authors": [
+        "warlock <internalmike@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [],
+      "license_fallback": {
+        "license": "Apache-2.0",
+        "origin": "repository LICENSE; NVIDIA copyright header omitted for utf8-chars",
+        "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6"
+      }
+    },
+    {
+      "name": "utf8parse",
+      "version": "0.2.2",
+      "license": "Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/alacritty/vte",
+      "authors": [
+        "Joe Wilm <joe@jwilm.com>",
+        "Christian Duerr <contact@christianduerr.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "e4c9b06fa850cb9b540a5e400e9f6394cf15efcf4098144de477d1d3dae10150"
+        }
+      ]
+    },
+    {
+      "name": "version_check",
+      "version": "0.9.5",
+      "license": "MIT/Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/SergioBenitez/version_check",
+      "authors": [
+        "Sergio Benitez <sb@sergio.bz>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+        },
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "b7e650f3fce5c53249d1cdc608b54df156a97edd636cf9d23498d0cfe7aec63e"
+        }
+      ]
+    },
+    {
+      "name": "wide",
+      "version": "1.7.1",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/Lokathor/wide",
+      "authors": [
+        "Lokathor <zefria@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-APACHE.txt",
+          "sha256": "d64ac6ba60c7352115244dcfcb46c24f934603dd92e64835beafe7631c485abc"
+        },
+        {
+          "path": "LICENSE-MIT.txt",
+          "sha256": "69c62cda6938d510467c134dc0b5c83fb9c8ca847b9cd9d9d2fe9ab427c82100"
+        },
+        {
+          "path": "LICENSE-ZLIB.txt",
+          "sha256": "3c6921f3dfec0bed0cfa2d632616edd7380a875c8ad76c7b23dc59892259f62c"
+        }
+      ]
+    },
+    {
+      "name": "windows-link",
+      "version": "0.2.1",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "license-apache-2.0",
+          "sha256": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+        },
+        {
+          "path": "license-mit",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "license-apache-2.0",
+          "sha256": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+        },
+        {
+          "path": "license-mit",
+          "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+        }
+      ]
+    },
+    {
+      "name": "winnow",
+      "version": "1.0.2",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/winnow-rs/winnow",
+      "authors": [],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "cb5aedb296c5246d1f22e9099f925a65146f9f0d6b4eebba97fd27a6cdbbab2d"
+        }
+      ]
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.21",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/zmij",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.23",
+      "license": "MIT",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/dtolnay/zmij",
+      "authors": [
+        "David Tolnay <dtolnay@gmail.com>"
+      ],
+      "used_by": [
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [
+        {
+          "path": "LICENSE-MIT",
+          "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+        }
+      ]
+    }
+  ],
+  "missing_license_texts": [
+    {
+      "name": "oxide-artifacts",
+      "version": "0.2.1",
+      "license": "Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/NVlabs/cuda-oxide.git",
+      "authors": [
+        "Nihal Pasham <nihalp@nvidia.com>"
+      ],
+      "used_by": [
+        "cargo-oxide"
+      ],
+      "license_files": [],
+      "license_fallback": {
+        "license": "Apache-2.0",
+        "origin": "repository LICENSE; NVIDIA copyright header omitted for utf8-chars",
+        "sha256": "fcd7f4edc6be93f37717add43dcb2617812d74536c6717b57028234b19a6d1db"
+      }
+    },
+    {
+      "name": "utf8-chars",
+      "version": "3.0.7",
+      "license": "MIT OR Apache-2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "repository": "https://github.com/A1-Triard/utf8-chars",
+      "authors": [
+        "warlock <internalmike@gmail.com>"
+      ],
+      "used_by": [
+        "cargo-oxide",
+        "rustc_codegen_cuda"
+      ],
+      "license_files": [],
+      "license_fallback": {
+        "license": "Apache-2.0",
+        "origin": "repository LICENSE; NVIDIA copyright header omitted for utf8-chars",
+        "sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6"
+      }
+    }
+  ]
+}

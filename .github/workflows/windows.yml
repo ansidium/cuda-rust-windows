@@ -95,6 +95,13 @@ jobs:
       - name: Build cargo-oxide
         run: cargo build --locked -p cargo-oxide
 
+      - name: Test CLI and Windows release handling
+        run: |
+          cargo test --locked -p cargo-oxide
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File ..\release\windows\test-release.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Test oxide-artifacts object feature
         run: cargo test --locked --manifest-path crates/oxide-artifacts/Cargo.toml --features object
 

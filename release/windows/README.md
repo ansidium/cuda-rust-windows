@@ -1,50 +1,59 @@
-# cuda-oxide Windows Release
+# CUDA Rust Windows
 
-This archive contains the Windows x86_64 MSVC build of the cuda-oxide cargo
-subcommand and codegen backend.
+Windows x64 tools for compiling and running Rust GPU kernels with cuda-oxide.
 
-## Files
+## Install
 
-- `cargo-oxide.exe` - the `cargo oxide` subcommand binary.
-- `rustc_codegen_cuda.dll` - the rustc codegen backend.
-- `README.md` - this release note.
-- `smoketest.ps1` - a lightweight archive sanity check.
+Use the signed onni setup from the release page for a per-user installation,
+optional PATH registration, a Start menu developer shell and uninstallation
+through Windows Installed apps. The installer supports 24 interface languages.
 
-Keep `cargo-oxide.exe` and `rustc_codegen_cuda.dll` in the same directory. The
-CLI checks this side-by-side layout before falling back to workspace, cache, or
-auto-fetch discovery.
+The portable ZIP contains the same tools. Extract all files together and keep
+your projects outside that directory. Add the directory to your shell's PATH,
+or start a prepared shell with:
 
-## Target
-
-`x86_64-pc-windows-msvc`
+```powershell
+powershell.exe -NoProfile -NoExit -File .\start-shell.ps1
+```
 
 ## Requirements
 
-- Windows 10/11 x86_64.
+- Windows 10 22H2 or Windows 11, x64.
 - Rustup with Rust 1.99.1 and the `rustc-dev`, `rust-src`, and `llvm-tools` components.
 - CUDA Toolkit 13.0+, including `nvcc`, `cuda.h`, `cuda.lib`,
   `nvvm64_*.dll`, `nvJitLink_*.dll`, and `libdevice.10.bc`.
 - Visual Studio 2022 Build Tools with MSVC x64 and a Windows SDK.
 - LLVM/Clang with libclang available on `PATH` or through `LIBCLANG_PATH`.
 
-## Quick Check
+The installer contains the CLI and ready-built rustc backend. CUDA Toolkit,
+Rust, MSVC and LLVM are installed separately. Source builds of the backend also
+need libffi; using the matching ready-built backend avoids that build step.
 
-From the extracted archive:
+## First kernel
 
-```powershell
-.\smoketest.ps1
-```
-
-To create and run a project with the extracted CLI:
+From the CUDA Rust developer shell:
 
 ```powershell
-.\cargo-oxide.exe new my-kernel
+cargo oxide new my-kernel
 cd my-kernel
-..\cargo-oxide.exe doctor
-..\cargo-oxide.exe run
+cargo oxide doctor
+cargo oxide run
 ```
 
-The archive does not include CUDA Toolkit DLLs, rustup toolchain DLLs, LLVM, or
-MSVC runtime redistributables. Install those through their normal installers.
+The CLI verifies the signed manifest, file hashes, runtime revision and Rust
+compiler fingerprint before loading the packaged backend. Dependencies at other
+revisions use a backend from their own source. Keep release-manifest.ps1 and all
+other package files beside cargo-oxide.exe.
 
-Source: [cuda-rust-windows](https://github.com/ansidium/cuda-rust-windows).
+## Update or remove
+
+`cargo oxide windows update` downloads and verifies the latest installer.
+Use `--version 0.4.0` to select a release or `--download-only` to save it without
+opening the wizard. `cargo oxide windows rollback` opens the previous installed
+version's installer, if recorded. It is unavailable on the first installation.
+
+Uninstall a managed installation through Windows Installed apps. The portable
+ZIP has no registration or uninstaller.
+
+[Full setup guide](https://github.com/ansidium/cuda-rust-windows/blob/main/cuda-oxide/cuda-oxide-book/getting-started/windows.md)
+· [Source and releases](https://github.com/ansidium/cuda-rust-windows)

@@ -388,6 +388,7 @@ The full set, as `cargo oxide --help` reports it:
 | `setup` | Build and cache the codegen backend |
 | `update` | Refresh the cached codegen backend (or run `setup` inside the workspace) |
 | `toolchain` | Install compiler toolchains managed by cargo-oxide |
+| `windows` | Install, update or return to the previous signed Windows distribution |
 
 Four of these are worth calling out, because they do something `cargo` itself
 cannot:

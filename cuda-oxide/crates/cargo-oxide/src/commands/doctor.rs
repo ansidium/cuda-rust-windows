@@ -263,15 +263,22 @@ fn doctor_report_toolchain_pin(ctx: &Context, ok: &mut bool) {
 /// Resolves offline: doctor must not fetch, and the dependency is already
 /// checked out once the project has resolved its lockfile. Informational,
 /// never fatal: a mismatch heals itself on the next build.
-fn doctor_report_backend_source(ctx: &Context) {
+fn doctor_report_backend_source(ctx: &Context, selection: DoctorBackendSelection) {
     print!("Backend source (cuda-oxide commit)... ");
     // Both pins sit above the dependency in backend discovery, so the
     // dependency's commit plays no part while either is set.
-    if std::env::var_os("CUDA_OXIDE_BACKEND").is_some() || ctx.config.backend.is_some() {
+    if selection == DoctorBackendSelection::Pinned {
         println!(
             "- backend pinned by CUDA_OXIDE_BACKEND or `.cargo/cuda-oxide.toml`; the \
              dependency's commit is not consulted"
         );
+        return;
+    }
+    if matches!(
+        selection,
+        DoctorBackendSelection::Packaged | DoctorBackendSelection::ReleaseCache
+    ) {
+        println!("✓ release backend selected; shared source cache bypassed");
         return;
     }
     // Read-only resolution needs a lockfile to read; a fresh project has none
@@ -290,6 +297,122 @@ fn doctor_report_backend_source(ctx: &Context) {
     println!("{}", check.headline);
     for line in check.details {
         println!("  {line}");
+    }
+}
+
+/// Classify the already resolved backend without fetching or building it.
+/// Explicit pins take precedence even when they point into the release folder.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum DoctorBackendSelection {
+    Pinned,
+    Packaged,
+    ReleaseCache,
+    Automatic,
+}
+
+pub(super) fn doctor_backend_selection(
+    backend: &Path,
+    executable: Option<&Path>,
+    explicit_pin: bool,
+    shared_cache_backend: Option<&Path>,
+) -> DoctorBackendSelection {
+    if explicit_pin {
+        DoctorBackendSelection::Pinned
+    } else if backend.is_file()
+        && executable
+            .and_then(Path::parent)
+            .is_some_and(|directory| backend.parent() == Some(directory))
+    {
+        DoctorBackendSelection::Packaged
+    } else if backend.is_file()
+        && shared_cache_backend.is_some_and(|cached| {
+            cached
+                .parent()
+                .zip(cached.file_name())
+                .is_some_and(|(directory, filename)| {
+                    directory
+                        .join("releases")
+                        .join(env!("CARGO_PKG_VERSION"))
+                        .join(filename)
+                        == backend
+                })
+        })
+    {
+        DoctorBackendSelection::ReleaseCache
+    } else {
+        DoctorBackendSelection::Automatic
+    }
+}
+
+/// Presence is a passive preflight check, not signature verification. Build/run
+/// validate the release with the embedded trusted verifier before using it.
+pub(super) fn doctor_release_manifest_check(
+    backend: &Path,
+    selection: DoctorBackendSelection,
+    windows: bool,
+) -> Option<OxideConfigCheck> {
+    if !windows
+        || !matches!(
+            selection,
+            DoctorBackendSelection::Packaged | DoctorBackendSelection::ReleaseCache
+        )
+    {
+        return None;
+    }
+    let manifest = backend.with_file_name("release-manifest.ps1");
+    (!manifest.is_file()).then(|| OxideConfigCheck {
+        headline: format!("✗ not found at {}", manifest.display()),
+        details: vec![
+            "Reinstall the matching Windows release before building or running kernels.".into(),
+        ],
+        failed: true,
+    })
+}
+
+/// A stale shared cache is actionable only when automatic backend discovery
+/// can select it. In particular, a signed release's adjacent backend outranks
+/// that cache, so recommending setup would replace a working packaged setup.
+pub(super) fn doctor_shared_cache_check(
+    selected_backend: &Path,
+    cached: Option<&Path>,
+    selection: DoctorBackendSelection,
+) -> OxideConfigCheck {
+    let check = |headline: String, details: Vec<String>| OxideConfigCheck {
+        headline,
+        details,
+        failed: false,
+    };
+    match selection {
+        DoctorBackendSelection::Pinned => {
+            return check("- bypassed by the explicit backend pin".into(), Vec::new());
+        }
+        DoctorBackendSelection::Packaged | DoctorBackendSelection::ReleaseCache => {
+            return check(
+                "- release backend selected; shared source cache bypassed".into(),
+                Vec::new(),
+            );
+        }
+        DoctorBackendSelection::Automatic => {}
+    }
+    let Some(cached) = cached else {
+        return check(
+            "- cache directory unknown (set CARGO_HOME or HOME)".into(),
+            Vec::new(),
+        );
+    };
+    match backend::compare_cache_to_local(cached, selected_backend) {
+        backend::CacheReport::Absent => check(
+            "- empty; external projects build on first use".into(),
+            Vec::new(),
+        ),
+        backend::CacheReport::UpToDate => check(format!("✓ {}", cached.display()), Vec::new()),
+        backend::CacheReport::OlderThanLocal => check(
+            format!("⚠ {}", cached.display()),
+            vec![
+                "Older than the selected backend; projects that use the shared cache may load a different one.".into(),
+                "Run `cargo oxide setup` to publish, or set CUDA_OXIDE_BACKEND to pin an explicit path.".into(),
+            ],
+        ),
     }
 }
 
@@ -407,27 +530,31 @@ pub fn doctor(ctx: &Context) {
     // 3a. Project config (`.cargo/cuda-oxide.toml`)
     doctor_report_oxide_config(ctx, &mut ok);
 
-    // 3b. Shared cache. The check above reports the backend this context
-    // resolves to, which inside the repository is the local build. A project
-    // outside the repository resolves to the cache instead, so the two can
-    // disagree while every other check passes.
+    // 3b. Shared cache. An explicit pin or an adjacent packaged backend
+    // outranks the cache; report that selection instead of advising setup.
+    let executable = std::env::current_exe().ok();
+    let shared_cache = backend::cached_backend_path();
+    let backend_selection = doctor_backend_selection(
+        &ctx.backend_so,
+        executable.as_deref(),
+        std::env::var_os("CUDA_OXIDE_BACKEND").is_some() || ctx.config.backend.is_some(),
+        shared_cache.as_deref(),
+    );
+    if let Some(check) =
+        doctor_release_manifest_check(&ctx.backend_so, backend_selection, cfg!(windows))
+    {
+        println!("Release manifest... {}", check.headline);
+        for line in check.details {
+            println!("  {line}");
+        }
+        ok &= !check.failed;
+    }
     print!("Shared cache (external projects)... ");
-    match backend::cached_backend_path() {
-        Some(cached) => match backend::compare_cache_to_local(&cached, &ctx.backend_so) {
-            backend::CacheReport::Absent => {
-                println!("- empty; external projects build on first use");
-            }
-            backend::CacheReport::UpToDate => {
-                println!("✓ {}", cached.display());
-            }
-            backend::CacheReport::OlderThanLocal => {
-                println!("⚠ {}", cached.display());
-                println!("  Older than the backend built here, so projects outside this");
-                println!("  repository would load a different one. Run `cargo oxide setup`");
-                println!("  to publish, or set CUDA_OXIDE_BACKEND to pin an explicit path.");
-            }
-        },
-        None => println!("- cache directory unknown (set CARGO_HOME or HOME)"),
+    let cache_check =
+        doctor_shared_cache_check(&ctx.backend_so, shared_cache.as_deref(), backend_selection);
+    println!("{}", cache_check.headline);
+    for line in cache_check.details {
+        println!("  {line}");
     }
 
     // 3c. Backend source. Outside the repository the backend is built from
@@ -435,7 +562,7 @@ pub fn doctor(ctx: &Context) {
     // the cache records which commit it came from. Informational: a mismatch
     // heals itself on the next build.
     if !ctx.is_workspace {
-        doctor_report_backend_source(ctx);
+        doctor_report_backend_source(ctx, backend_selection);
     }
 
     // 4. CUDA headers (cuda.h). The host `cuda-bindings` crate cannot build

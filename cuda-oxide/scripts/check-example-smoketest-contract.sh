@@ -96,7 +96,11 @@ verdict_wgmma wgmma "$2" "$3"
     ptx.parent.mkdir(parents=True)
     assembler = root / "ptxas"
     assembler.write_text('''#!/usr/bin/env bash
-[[ "$*" == "-arch=sm_90a crates/rustc-codegen-cuda/examples/wgmma/wgmma.ptx -o /dev/null" ]] || exit 99
+null_sink="/dev/null"
+case "${OSTYPE:-}" in
+    msys*|cygwin*|win32*) null_sink="NUL" ;;
+esac
+[[ "$*" == "-arch=sm_90a crates/rustc-codegen-cuda/examples/wgmma/wgmma.ptx -o ${null_sink}" ]] || exit 99
 case "$SMOKETEST_TEST_PTXAS" in
     ok) exit 0 ;;
     old) echo "ptxas fatal : Unsupported .version 8.0"; exit 1 ;;

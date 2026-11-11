@@ -1,0 +1,7 @@
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved. -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <path d="M24 8v8m8-8v8m8-8v8M24 48v8m8-8v8m8-8v8M8 24h8m-8 8h8m-8 8h8M48 24h8m-8 8h8m-8 8h8" stroke="#277A51" stroke-width="4" stroke-linecap="round"/>
+  <rect x="14" y="14" width="36" height="36" rx="5" fill="#172420"/>
+  <path d="M23 23h7v7h-7zm11 0h7v7h-7zM23 34h7v7h-7zm11 0h7v7h-7z" fill="#5DD590"/>
+</svg>

@@ -127,7 +127,7 @@ pub(crate) const PINNED_SOURCE_REPOSITORY: &str =
 // This source commit may intentionally precede the cargo-oxide CLI commit:
 // embedding a commit's own SHA is impossible. It must nevertheless contain
 // the complete backend and library migration for the selected compiler.
-pub(crate) const PINNED_SOURCE_REVISION: &str = "2eb0611041c5665008e7804cc282d8927d08afd1";
+pub(crate) const PINNED_SOURCE_REVISION: &str = "c3ac8a9626bab9f9043dc358d5b76b2b64fa721f";
 
 struct BackendCacheLock {
     file: std::fs::File,
@@ -264,7 +264,25 @@ pub fn find_or_build_backend(workspace_root: &Path, configured_backend: Option<&
     // 3. Packaged release layout: cargo-oxide.exe and rustc_codegen_cuda.dll
     // live side-by-side in the extracted archive. This keeps release users from
     // having to set CUDA_OXIDE_BACKEND manually.
-    if let Some(packaged_backend) = packaged_backend_path(&backend_filename) {
+    if !crate::windows_release::source_only()
+        && let Some(packaged_backend) = packaged_backend_path(&backend_filename)
+    {
+        // Windows release backends must not silently become unverified when
+        // their manifest is deleted. Custom backends use the explicit env or
+        // project override above, or source-only mode.
+        if cfg!(windows) {
+            let source = resolve_standalone_dependency(workspace_root);
+            if source
+                .as_ref()
+                .is_some_and(|source| source.rev() != Some(PINNED_SOURCE_REVISION))
+            {
+                return backend_for_dependency(source);
+            }
+            if let Err(error) = crate::windows_release::verify_packaged(&packaged_backend) {
+                eprintln!("Error: {error}");
+                std::process::exit(1);
+            }
+        }
         return packaged_backend;
     }
 
@@ -336,6 +354,19 @@ fn backend_for_dependency(source: Option<DependencySource>) -> PathBuf {
             return cached;
         }
         match &source {
+            _ if crate::windows_release::supports_prebuilt(expected_rev) => {
+                match crate::windows_release::prebuilt(cache_dir, expected_rev) {
+                    Ok(Some(backend)) => backend,
+                    Ok(None) => match &source {
+                        Some(source) => build_and_cache(source, cache_dir),
+                        None => auto_fetch_and_build(cache_dir, &backend_filename),
+                    },
+                    Err(error) => {
+                        eprintln!("Error: {error}");
+                        std::process::exit(1);
+                    }
+                }
+            }
             Some(source) => build_and_cache(source, cache_dir),
             None => auto_fetch_and_build(cache_dir, &backend_filename),
         }
@@ -581,8 +612,25 @@ pub fn backend_so_candidate(workspace_root: &Path, configured_backend: Option<&P
         return path.to_path_buf();
     }
 
-    if let Some(packaged_backend) = packaged_backend_path(&backend_filename) {
-        return packaged_backend;
+    if !crate::windows_release::source_only()
+        && let Some(packaged_backend) = packaged_backend_path(&backend_filename)
+    {
+        if !packaged_backend
+            .with_file_name("release-manifest.ps1")
+            .is_file()
+        {
+            return packaged_backend;
+        }
+        // A signed distribution only lowers its own runtime revision. Resolve
+        // without fetching or writing Cargo.lock, just as the build path does
+        // with full resolution. An unresolved project cannot establish a match.
+        if let Ok(source) = backend_source::resolve_dependency_source(workspace_root, true)
+            && source
+                .as_ref()
+                .is_none_or(|s| s.rev() == Some(PINNED_SOURCE_REVISION))
+        {
+            return packaged_backend;
+        }
     }
 
     let codegen_crate = codegen_crate_path(workspace_root);
@@ -594,15 +642,34 @@ pub fn backend_so_candidate(workspace_root: &Path, configured_backend: Option<&P
     // artifact is that checkout's own host build, not the shared cache.
     // Read-only resolution: never fetches or writes; any failure (no
     // Cargo.lock yet, no cargo) falls through to the cache path.
-    if let Ok(Some(source)) = backend_source::resolve_dependency_source(workspace_root, true)
+    let resolved = backend_source::resolve_dependency_source(workspace_root, true);
+    if let Ok(Some(source)) = &resolved
         && source.rev().is_none()
     {
         return backend_so_path_candidate(&source.codegen_crate());
     }
 
-    cache_directory()
-        .map(|dir| dir.join(&backend_filename))
-        .unwrap_or_else(|| PathBuf::from(backend_filename))
+    let Some(cache) = cache_directory() else {
+        return PathBuf::from(backend_filename);
+    };
+    let cached = cache.join(&backend_filename);
+    if let Ok(source) = &resolved {
+        let revision = source.as_ref().and_then(DependencySource::rev);
+        let source_dir = codegen_crate_path(&cache.join("src"));
+        let source_dir = source.is_none().then_some(source_dir.as_path());
+        let release = cache
+            .join("releases")
+            .join(env!("CARGO_PKG_VERSION"))
+            .join(&backend_filename);
+        if crate::windows_release::supports_prebuilt(revision)
+            && release.is_file()
+            && (!cached.is_file()
+                || cached_backend_status(&cached, source_dir, revision) != CacheStatus::Fresh)
+        {
+            return release;
+        }
+    }
+    cached
 }
 
 /// Why the cached backend is out of date, or that it is current. The two
@@ -711,7 +778,7 @@ const TOOLCHAIN_FINGERPRINT_FILE: &str = "toolchain-fingerprint.txt";
 /// `rustc` proxy resolves `rust-toolchain.toml` by walking up from the cwd,
 /// and the backend builds with `current_dir = <source clone>` whose nested
 /// pin can differ from the user's cwd.
-fn current_toolchain_fingerprint() -> Option<String> {
+pub(crate) fn current_toolchain_fingerprint() -> Option<String> {
     fingerprint_from_command(toolchain_fingerprint_command(None))
 }
 
