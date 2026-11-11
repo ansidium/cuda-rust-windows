@@ -81,7 +81,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.tile == 'true' ||
       needs.changes.outputs.any_changed != 'true'
-    runs-on: linux-amd64-cpu4
+    runs-on: ${{ github.repository == 'ansidium/cuda-rust-windows' && 'ubuntu-latest' || 'linux-amd64-cpu4' }}
     container:
       image: rust:1.99.1-bookworm
     timeout-minutes: 15
