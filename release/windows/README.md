@@ -13,7 +13,7 @@ your projects outside that directory. Add the directory to your shell's PATH,
 or start a prepared shell with:
 
 ```powershell
-powershell.exe -NoProfile -NoExit -File .\start-shell.ps1
+powershell.exe -NoProfile -NoExit -ExecutionPolicy Bypass -File .\start-shell.ps1
 ```
 
 ## Requirements

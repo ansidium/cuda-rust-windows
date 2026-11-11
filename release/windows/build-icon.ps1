@@ -10,8 +10,8 @@ foreach ($size in @(16, 20, 24, 32, 40, 48, 64, 128, 256)) {
     $graphics = [Drawing.Graphics]::FromImage($bitmap)
     $graphics.SmoothingMode = [Drawing.Drawing2D.SmoothingMode]::AntiAlias
     $graphics.ScaleTransform($size / 64.0, $size / 64.0)
-    $ink = [Drawing.ColorTranslator]::FromHtml('#172420')
-    $pen = [Drawing.Pen]::new([Drawing.ColorTranslator]::FromHtml('#277A51'), 4)
+    $ink = [Drawing.ColorTranslator]::FromHtml('#1E1E1E')
+    $pen = [Drawing.Pen]::new([Drawing.ColorTranslator]::FromHtml('#76B900'), 4)
     $pen.StartCap = $pen.EndCap = [Drawing.Drawing2D.LineCap]::Round
     foreach ($p in @(24, 32, 40)) {
         $graphics.DrawLine($pen, $p, 8, $p, 16)
@@ -26,7 +26,7 @@ foreach ($size in @(16, 20, 24, 32, 40, 48, 64, 128, 256)) {
     $shape.AddArc(14, 40, 10, 10, 90, 90)
     $shape.CloseFigure()
     $dark = [Drawing.SolidBrush]::new($ink)
-    $green = [Drawing.SolidBrush]::new([Drawing.ColorTranslator]::FromHtml('#5DD590'))
+    $green = [Drawing.SolidBrush]::new([Drawing.ColorTranslator]::FromHtml('#76B900'))
     $graphics.FillPath($dark, $shape)
     foreach ($x in @(23,34)) { foreach ($y in @(23,34)) { $graphics.FillRectangle($green, $x, $y, 7, 7) } }
     $memory = [IO.MemoryStream]::new()

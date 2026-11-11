@@ -1,5 +1,19 @@
 # Windows Changelog
 
+## [windows-v0.4.0](https://github.com/ansidium/cuda-rust-windows/releases/tag/windows-v0.4.0) - 2026-11-12
+
+- Updated to cuda-oxide 0.4.0 and shared host crates 0.5.0, including the merged
+  upstream Windows support.
+- Added a signed onni installer with 24 languages, a developer shell, optional
+  user PATH registration, repair and uninstallation.
+- Added signed prebuilt backend delivery with exact runtime/compiler matching,
+  bounded downloads and extraction, and an explicit source-only mode.
+- Added `cargo oxide windows install`, `update` and `rollback` commands.
+- Made `doctor` report the selected release backend and reject a missing release
+  manifest without misleading warnings about an unused source cache.
+- Added Windows release regressions and fixed the smoke guard's Windows null
+  output path. Included dependency notices in the distribution.
+
 ## [windows-v0.3.0](https://github.com/ansidium/cuda-rust-windows/releases/tag/windows-v0.3.0) - 2026-11-02
 
 - Updated to CUDA-Oxide 0.3.0 and the shared host runtime 0.5.0.

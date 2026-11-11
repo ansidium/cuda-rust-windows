@@ -1,0 +1,315 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+format = 1
+
+[languages.en]
+messages = ["locales/en.ftl"]
+
+[messages.en]
+requirements_title = "Before you start"
+requirements_description = "Tools needed to build and run GPU kernels"
+gpu = "To run kernels: a compatible NVIDIA GPU and driver"
+guide = "Open the Windows setup guide"
+path = "Add CUDA Rust Windows to my PATH"
+shell = "CUDA Rust developer shell"
+register = "Configuring the developer tools..."
+finish = "Open the CUDA Rust developer shell"
+
+[languages.ru]
+messages = ["locales/ru.ftl"]
+
+[messages.ru]
+requirements_title = "Перед началом работы"
+requirements_description = "Инструменты для сборки и запуска GPU-ядер"
+gpu = "Для запуска ядер: совместимая видеокарта NVIDIA и драйвер"
+guide = "Открыть руководство по настройке Windows"
+path = "Добавить CUDA Rust Windows в мой PATH"
+shell = "Среда разработки CUDA Rust"
+register = "Настройка инструментов разработчика..."
+finish = "Открыть среду разработки CUDA Rust"
+
+[languages.uk]
+messages = ["locales/uk.ftl"]
+
+[messages.uk]
+requirements_title = "Перед початком роботи"
+requirements_description = "Інструменти для збирання та запуску GPU-ядер"
+gpu = "Для запуску ядер: сумісна відеокарта NVIDIA та драйвер"
+guide = "Відкрити посібник із налаштування Windows"
+path = "Додати CUDA Rust Windows до мого PATH"
+shell = "Середовище розробки CUDA Rust"
+register = "Налаштування інструментів розробника..."
+finish = "Відкрити середовище розробки CUDA Rust"
+
+[languages.de]
+messages = ["locales/de.ftl"]
+
+[messages.de]
+requirements_title = "Bevor Sie beginnen"
+requirements_description = "Werkzeuge zum Erstellen und Ausführen von GPU-Kernels"
+gpu = "Zum Ausführen: eine kompatible NVIDIA-GPU und ein Treiber"
+guide = "Windows-Einrichtungsanleitung öffnen"
+path = "CUDA Rust Windows zu meinem PATH hinzufügen"
+shell = "CUDA Rust-Entwicklerkonsole"
+register = "Entwicklungswerkzeuge werden eingerichtet..."
+finish = "CUDA Rust-Entwicklerkonsole öffnen"
+
+[languages.fr]
+messages = ["locales/fr.ftl"]
+
+[messages.fr]
+requirements_title = "Avant de commencer"
+requirements_description = "Outils nécessaires pour compiler et exécuter des noyaux GPU"
+gpu = "Pour l’exécution : un GPU NVIDIA compatible et son pilote"
+guide = "Ouvrir le guide de configuration Windows"
+path = "Ajouter CUDA Rust Windows à mon PATH"
+shell = "Console de développement CUDA Rust"
+register = "Configuration des outils de développement..."
+finish = "Ouvrir la console de développement CUDA Rust"
+
+[languages.es]
+messages = ["locales/es.ftl"]
+
+[messages.es]
+requirements_title = "Antes de empezar"
+requirements_description = "Herramientas para compilar y ejecutar kernels de GPU"
+gpu = "Para ejecutarlos: una GPU NVIDIA compatible y su controlador"
+guide = "Abrir la guía de configuración de Windows"
+path = "Añadir CUDA Rust Windows a mi PATH"
+shell = "Consola de desarrollo de CUDA Rust"
+register = "Configurando las herramientas de desarrollo..."
+finish = "Abrir la consola de desarrollo de CUDA Rust"
+
+[languages.it]
+messages = ["locales/it.ftl"]
+
+[messages.it]
+requirements_title = "Prima di iniziare"
+requirements_description = "Strumenti per compilare ed eseguire kernel GPU"
+gpu = "Per l’esecuzione: una GPU NVIDIA compatibile e il relativo driver"
+guide = "Apri la guida alla configurazione di Windows"
+path = "Aggiungi CUDA Rust Windows al mio PATH"
+shell = "Console di sviluppo CUDA Rust"
+register = "Configurazione degli strumenti di sviluppo..."
+finish = "Apri la console di sviluppo CUDA Rust"
+
+[languages.pt-BR]
+messages = ["locales/pt-BR.ftl"]
+
+[messages.pt-BR]
+requirements_title = "Antes de começar"
+requirements_description = "Ferramentas para compilar e executar kernels de GPU"
+gpu = "Para executar: uma GPU NVIDIA compatível e seu driver"
+guide = "Abrir o guia de configuração do Windows"
+path = "Adicionar CUDA Rust Windows ao meu PATH"
+shell = "Console de desenvolvimento CUDA Rust"
+register = "Configurando as ferramentas de desenvolvimento..."
+finish = "Abrir o console de desenvolvimento CUDA Rust"
+
+[languages.pl]
+messages = ["locales/pl.ftl"]
+
+[messages.pl]
+requirements_title = "Zanim zaczniesz"
+requirements_description = "Narzędzia do kompilowania i uruchamiania jąder GPU"
+gpu = "Do uruchamiania: zgodna karta graficzna NVIDIA i sterownik"
+guide = "Otwórz instrukcję konfiguracji dla Windows"
+path = "Dodaj CUDA Rust Windows do mojego PATH"
+shell = "Konsola programistyczna CUDA Rust"
+register = "Konfigurowanie narzędzi programistycznych..."
+finish = "Otwórz konsolę programistyczną CUDA Rust"
+
+[languages.cs]
+messages = ["locales/cs.ftl"]
+
+[messages.cs]
+requirements_title = "Než začnete"
+requirements_description = "Nástroje pro sestavení a spouštění GPU kernelů"
+gpu = "Pro spuštění: kompatibilní GPU NVIDIA a ovladač"
+guide = "Otevřít průvodce nastavením Windows"
+path = "Přidat CUDA Rust Windows do mé proměnné PATH"
+shell = "Vývojářská konzole CUDA Rust"
+register = "Nastavování vývojářských nástrojů..."
+finish = "Otevřít vývojářskou konzoli CUDA Rust"
+
+[languages.sk]
+messages = ["locales/sk.ftl"]
+
+[messages.sk]
+requirements_title = "Skôr než začnete"
+requirements_description = "Nástroje na zostavenie a spúšťanie GPU kernelov"
+gpu = "Na spustenie: kompatibilné GPU NVIDIA a ovládač"
+guide = "Otvoriť návod na nastavenie Windows"
+path = "Pridať CUDA Rust Windows do mojej premennej PATH"
+shell = "Vývojárska konzola CUDA Rust"
+register = "Nastavovanie vývojárskych nástrojov..."
+finish = "Otvoriť vývojársku konzolu CUDA Rust"
+
+[languages.hu]
+messages = ["locales/hu.ftl"]
+
+[messages.hu]
+requirements_title = "Mielőtt elkezdi"
+requirements_description = "Eszközök GPU-kernelek fordításához és futtatásához"
+gpu = "A futtatáshoz: kompatibilis NVIDIA GPU és illesztőprogram"
+guide = "A Windows beállítási útmutatójának megnyitása"
+path = "CUDA Rust Windows hozzáadása a saját PATH változómhoz"
+shell = "CUDA Rust fejlesztői konzol"
+register = "Fejlesztői eszközök beállítása..."
+finish = "A CUDA Rust fejlesztői konzol megnyitása"
+
+[languages.nl]
+messages = ["locales/nl.ftl"]
+
+[messages.nl]
+requirements_title = "Voordat u begint"
+requirements_description = "Hulpmiddelen om GPU-kernels te bouwen en uit te voeren"
+gpu = "Voor uitvoering: een compatibele NVIDIA-GPU en driver"
+guide = "De installatiehandleiding voor Windows openen"
+path = "CUDA Rust Windows aan mijn PATH toevoegen"
+shell = "CUDA Rust-ontwikkelaarsconsole"
+register = "Ontwikkelhulpmiddelen worden ingesteld..."
+finish = "De CUDA Rust-ontwikkelaarsconsole openen"
+
+[languages.sv]
+messages = ["locales/sv.ftl"]
+
+[messages.sv]
+requirements_title = "Innan du börjar"
+requirements_description = "Verktyg för att bygga och köra GPU-kärnor"
+gpu = "För körning: en kompatibel NVIDIA-GPU och drivrutin"
+guide = "Öppna installationsguiden för Windows"
+path = "Lägg till CUDA Rust Windows i min PATH"
+shell = "CUDA Rust-utvecklarkonsol"
+register = "Konfigurerar utvecklingsverktygen..."
+finish = "Öppna CUDA Rust-utvecklarkonsolen"
+
+[languages.da]
+messages = ["locales/da.ftl"]
+
+[messages.da]
+requirements_title = "Før du begynder"
+requirements_description = "Værktøjer til at bygge og køre GPU-kerner"
+gpu = "Til kørsel: en kompatibel NVIDIA-GPU og driver"
+guide = "Åbn installationsvejledningen til Windows"
+path = "Føj CUDA Rust Windows til min PATH"
+shell = "CUDA Rust-udviklerkonsol"
+register = "Konfigurerer udviklingsværktøjerne..."
+finish = "Åbn CUDA Rust-udviklerkonsollen"
+
+[languages.nb]
+messages = ["locales/nb.ftl"]
+
+[messages.nb]
+requirements_title = "Før du begynner"
+requirements_description = "Verktøy for å bygge og kjøre GPU-kjerner"
+gpu = "For kjøring: en kompatibel NVIDIA-GPU og driver"
+guide = "Åpne oppsettsveiledningen for Windows"
+path = "Legg til CUDA Rust Windows i min PATH"
+shell = "CUDA Rust-utviklerkonsoll"
+register = "Konfigurerer utviklingsverktøyene..."
+finish = "Åpne CUDA Rust-utviklerkonsollen"
+
+[languages.fi]
+messages = ["locales/fi.ftl"]
+
+[messages.fi]
+requirements_title = "Ennen aloittamista"
+requirements_description = "Työkalut GPU-ytimien kääntämiseen ja suorittamiseen"
+gpu = "Suorittamiseen: yhteensopiva NVIDIA GPU ja ajuri"
+guide = "Avaa Windowsin asennusopas"
+path = "Lisää CUDA Rust Windows PATH-muuttujaani"
+shell = "CUDA Rust -kehittäjäkonsoli"
+register = "Määritetään kehitystyökaluja..."
+finish = "Avaa CUDA Rust -kehittäjäkonsoli"
+
+[languages.ro]
+messages = ["locales/ro.ftl"]
+
+[messages.ro]
+requirements_title = "Înainte de a începe"
+requirements_description = "Instrumente pentru compilarea și rularea nucleelor GPU"
+gpu = "Pentru rulare: un GPU NVIDIA compatibil și driverul său"
+guide = "Deschide ghidul de configurare pentru Windows"
+path = "Adaugă CUDA Rust Windows în variabila mea PATH"
+shell = "Consola de dezvoltare CUDA Rust"
+register = "Se configurează instrumentele de dezvoltare..."
+finish = "Deschide consola de dezvoltare CUDA Rust"
+
+[languages.tr]
+messages = ["locales/tr.ftl"]
+
+[messages.tr]
+requirements_title = "Başlamadan önce"
+requirements_description = "GPU çekirdeklerini derlemek ve çalıştırmak için araçlar"
+gpu = "Çalıştırmak için: uyumlu bir NVIDIA GPU ve sürücüsü"
+guide = "Windows kurulum kılavuzunu aç"
+path = "CUDA Rust Windows’u PATH değişkenime ekle"
+shell = "CUDA Rust geliştirici konsolu"
+register = "Geliştirici araçları yapılandırılıyor..."
+finish = "CUDA Rust geliştirici konsolunu aç"
+
+[languages.ja]
+messages = ["locales/ja.ftl"]
+
+[messages.ja]
+requirements_title = "開始前の確認"
+requirements_description = "GPU カーネルのビルドと実行に必要なツール"
+gpu = "実行には、対応する NVIDIA GPU とドライバーが必要です"
+guide = "Windows セットアップガイドを開く"
+path = "CUDA Rust Windows をユーザーの PATH に追加する"
+shell = "CUDA Rust 開発者シェル"
+register = "開発ツールを設定しています..."
+finish = "CUDA Rust 開発者シェルを開く"
+
+[languages.ko]
+messages = ["locales/ko.ftl"]
+
+[messages.ko]
+requirements_title = "시작하기 전에"
+requirements_description = "GPU 커널을 빌드하고 실행하는 데 필요한 도구"
+gpu = "실행 시 호환되는 NVIDIA GPU와 드라이버가 필요합니다"
+guide = "Windows 설정 가이드 열기"
+path = "내 PATH에 CUDA Rust Windows 추가"
+shell = "CUDA Rust 개발자 셸"
+register = "개발 도구를 설정하는 중..."
+finish = "CUDA Rust 개발자 셸 열기"
+
+[languages.zh-Hans]
+messages = ["locales/zh-Hans.ftl"]
+
+[messages.zh-Hans]
+requirements_title = "开始之前"
+requirements_description = "构建和运行 GPU 内核所需的工具"
+gpu = "运行内核需要兼容的 NVIDIA GPU 和驱动程序"
+guide = "打开 Windows 设置指南"
+path = "将 CUDA Rust Windows 添加到我的 PATH"
+shell = "CUDA Rust 开发者终端"
+register = "正在配置开发工具..."
+finish = "打开 CUDA Rust 开发者终端"
+
+[languages.zh-Hant]
+messages = ["locales/zh-Hant.ftl"]
+
+[messages.zh-Hant]
+requirements_title = "開始之前"
+requirements_description = "建置和執行 GPU 核心所需的工具"
+gpu = "執行核心需要相容的 NVIDIA GPU 和驅動程式"
+guide = "開啟 Windows 設定指南"
+path = "將 CUDA Rust Windows 加入我的 PATH"
+shell = "CUDA Rust 開發者終端機"
+register = "正在設定開發工具..."
+finish = "開啟 CUDA Rust 開發者終端機"
+
+[languages.el]
+messages = ["locales/el.ftl"]
+
+[messages.el]
+requirements_title = "Πριν ξεκινήσετε"
+requirements_description = "Εργαλεία μεταγλώττισης και εκτέλεσης πυρήνων GPU"
+gpu = "Για την εκτέλεση: συμβατή GPU NVIDIA και πρόγραμμα οδήγησης"
+guide = "Άνοιγμα του οδηγού ρύθμισης των Windows"
+path = "Προσθήκη του CUDA Rust Windows στο PATH μου"
+shell = "Κονσόλα ανάπτυξης CUDA Rust"
+register = "Ρύθμιση εργαλείων ανάπτυξης..."
+finish = "Άνοιγμα της κονσόλας ανάπτυξης CUDA Rust"

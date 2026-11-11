@@ -18,6 +18,12 @@ for `x86_64-pc-windows-msvc`, using pinned Rust 1.99.1.
 
 See [FORK.md](FORK.md) for fork differences and maintenance policy.
 
+The Windows release includes a signed onni installer with 24 interface languages,
+a developer shell, and a portable ZIP. The installer runs for the current user
+and offers to add `cargo oxide` to PATH. See the
+[Windows guide](cuda-oxide/cuda-oxide-book/getting-started/windows.md) for prerequisites
+and your first GPU kernel.
+
 CUDA Rust is NVIDIA's CUDA platform for Rust. It provides
 host-side crates for working with the CUDA driver and device-side crates and
 tools for writing GPU kernels in idiomatic Rust.

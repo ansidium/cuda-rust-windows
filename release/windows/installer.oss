@@ -1,0 +1,116 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+format = 1
+include = ["locales.oss"]
+
+[vars]
+version = "0.4.0"
+payload = "../../cuda-oxide/target/windows-release/cuda-oxide-v0.4.0-x86_64-pc-windows-msvc"
+
+[app]
+id = "cuda-rust-windows"
+name = "CUDA Rust Windows"
+version = "{var:version}"
+publisher = "ansidium"
+publisher_url = "https://github.com/ansidium/cuda-rust-windows"
+support_url = "https://github.com/ansidium/cuda-rust-windows/issues"
+updates_url = "https://github.com/ansidium/cuda-rust-windows/releases"
+
+[install]
+privileges = "user"
+runtime = "x64"
+architectures = "arch() == 'x64'"
+install_64bit = "true"
+min_os = "10.0.19045"
+default_dir = "{localappdata}/Programs/CUDA Rust Windows"
+default_group = "CUDA Rust Windows"
+allow_no_icons = true
+allow_network_drive = false
+allow_unc_path = false
+changes_environment = true
+remove_stale = true
+
+[uninstall]
+display_icon = "{app}/cuda-rust.ico"
+
+[wizard]
+welcome_page = true
+group_page = false
+ready_page = false
+language_selection = "inline"
+
+[theme]
+scheme = "system"
+layout = "classic"
+next_button_style = "neutral"
+accent = "#76B900"
+background = "#F3F3F3"
+background_dark = "#202020"
+side_image = "assets/gpu-chip.png"
+side_image_background = "#E7E7E7"
+side_image_background_dark = "#191919"
+image_fit = "fit"
+size_percent = 100
+
+[output]
+icon = "assets/chip-icon.ico"
+base_name = "cuda-oxide-v{var:version}-windows-x64-setup"
+version_info.product_name = "CUDA Rust Windows"
+version_info.product_text_version = "{var:version}"
+
+[signing]
+required = true
+
+[pages.requirements]
+after = "welcome"
+title = "{msg:requirements_title}"
+description = "{msg:requirements_description}"
+blocks = [
+  { text = "Rust 1.99.1 — rustc-dev, rust-src, llvm-tools" },
+  { text = "CUDA Toolkit 13+" },
+  { text = "Visual Studio C++ Build Tools + LLVM/Clang" },
+  { space = 12 },
+  { text = "{msg:gpu}" },
+  { space = 16 },
+  { link = { label = "{msg:guide}", url = "https://github.com/ansidium/cuda-rust-windows/blob/main/cuda-oxide/cuda-oxide-book/getting-started/windows.md" } },
+  { space = 12 },
+  { checkbox = { var = "add_path", label = "{msg:path}", checked = true, remember = true } },
+]
+
+[files.app]
+source = "{var:payload}/*"
+dest = "{app}"
+replace = "always"
+
+[shortcuts.shell]
+location = "{group}"
+name = "{msg:shell}"
+target = "{sys}/WindowsPowerShell/v1.0/powershell.exe"
+icon = "{app}/cuda-rust.ico"
+arguments = ["-NoLogo", "-NoProfile", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "{app}/start-shell.ps1"]
+
+[run.register]
+program = "{sys}/WindowsPowerShell/v1.0/powershell.exe"
+arguments = ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "{app}/manage-windows.ps1", "-Action", "Register", "-Destination", "{app}", "-Version", "{var:version}", { value = "-AddPath", when = "var('add_path') == 'true'" }]
+status = "{msg:register}"
+wait = "exit"
+window = "hidden"
+exit_codes = [0]
+on_failure = "fail"
+
+[run.shell]
+program = "{sys}/WindowsPowerShell/v1.0/powershell.exe"
+arguments = ["-NoLogo", "-NoProfile", "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "{app}/start-shell.ps1"]
+description = "{msg:finish}"
+phase = "post"
+checked = false
+wait = "none"
+
+[uninstall_run.unregister]
+program = "{sys}/WindowsPowerShell/v1.0/powershell.exe"
+arguments = ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "{app}/manage-windows.ps1", "-Action", "Unregister", "-Destination", "{app}"]
+run_once_id = "cuda-rust-windows-path"
+wait = "exit"
+window = "hidden"
+exit_codes = [0]
+on_failure = "fail"
