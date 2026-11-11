@@ -181,6 +181,7 @@ jobs:
           sysroot="$(rustc --print sysroot)"
           export LIBRARY_PATH="${sysroot}/lib:${LIBRARY_PATH:-}"
           export LD_LIBRARY_PATH="${sysroot}/lib:${LD_LIBRARY_PATH:-}"
+          export PATH="${CARGO_TARGET_DIR}/debug:${PATH}"
           bash scripts/check-shared-static-names.sh
 
       - name: Artifact modes keep shared Cargo dependencies fresh
