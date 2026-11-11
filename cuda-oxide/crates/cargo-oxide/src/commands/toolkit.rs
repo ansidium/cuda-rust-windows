@@ -201,6 +201,8 @@ pub(super) fn find_executable(name: &str, fallback_paths: &[&str]) -> Option<Pat
     find_executable_for_target(name, fallback_paths, &host_target)
 }
 
+/// Locate an executable for `target` by scanning `PATH` (with `PATHEXT` on Windows)
+/// and then probing `fallback_paths`.
 fn find_executable_for_target(
     name: &str,
     fallback_paths: &[&str],
@@ -222,6 +224,7 @@ fn find_executable_for_target(
     None
 }
 
+/// Search `paths` for `name`, honoring `pathext` on Windows targets.
 fn find_executable_in_path(
     name: &str,
     paths: &OsStr,
@@ -293,6 +296,7 @@ pub(super) fn find_cuda_toolkit_executable_with_env(
     None
 }
 
+/// Probe `path` directly or with Windows executable extensions (`PATHEXT`).
 fn find_executable_path(path: &Path, pathext: Option<&OsStr>, target: &str) -> Option<PathBuf> {
     if path.is_file() {
         return Some(path.to_path_buf());
@@ -308,6 +312,7 @@ fn find_executable_path(path: &Path, pathext: Option<&OsStr>, target: &str) -> O
         .find(|candidate| candidate.is_file())
 }
 
+/// Candidate executable filenames for `name` on `target`.
 fn executable_candidate_names(name: &str, pathext: Option<&OsStr>, target: &str) -> Vec<OsString> {
     let mut names = vec![OsString::from(name)];
     if !platform::is_windows_target(target) || Path::new(name).extension().is_some() {

@@ -1,6 +1,6 @@
 # Windows Setup
 
-The Windows fork targets `x86_64-pc-windows-msvc` on Windows 10 22H2 and Windows 11.
+`cuda-oxide` supports `x86_64-pc-windows-msvc` on Windows 10 22H2 and Windows 11.
 For Linux, see [Installation](installation.md).
 
 ## Requirements
@@ -56,6 +56,7 @@ $env:VCPKG_ROOT = "C:\vcpkg"
 & "$env:VCPKG_ROOT\vcpkg.exe" install libffi:x64-windows
 cd cuda-oxide
 cargo install --locked --path crates/cargo-oxide
+cargo oxide setup
 cargo oxide doctor
 cargo oxide run vecadd
 ```
@@ -71,4 +72,12 @@ Maintainers can package the CLI and backend from the repository root with:
 
 ```powershell
 .\cuda-oxide\scripts\package-windows-release.ps1
+```
+
+## Compute Sanitizer on Windows (WDDM)
+
+When running `cargo oxide sanitize` on a Windows GPU using the WDDM driver model, enable the WDDM debugger interface once from an elevated Administrator prompt:
+
+```powershell
+& "$env:CUDA_PATH\compute-sanitizer\EnableDebuggerInterface.bat"
 ```

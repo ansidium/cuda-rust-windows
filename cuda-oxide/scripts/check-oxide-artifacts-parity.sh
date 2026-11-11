@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 # Keep the artifact format version consistent. Only the isolated backend uses
-# the fork's in-tree COFF writer; host runtimes retain the registry crate.
+# the in-tree COFF writer; host runtimes retain the registry crate.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

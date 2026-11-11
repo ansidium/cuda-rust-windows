@@ -139,7 +139,7 @@ cuda-oxide is split into focused crates. Here is every one and its role:
 | `cargo-oxide`        | CLI tool: `cargo oxide build`, `cargo oxide run`, `cargo oxide pipeline`               |
 | `cuda-device`        | Device-side API: intrinsics, `DisjointSlice`, barriers, shared memory, warp ops        |
 | `cute-layout`       | CuTe-style layout algebra and coordinate mapping                                       |
-| `ctm-rs`            | Typed instruction-level CUDA primitives |
+| `cutlass-primitives`            | Typed instruction-level CUDA primitives |
 | `cute-rs`           | Typed CuTe tensors, tiles, copies, pipelines, and MMA operations                        |
 | `cuda-macros`        | Proc macros: `#[kernel]`, `#[device]`                                                  |
 | `cuda-host`          | Host-side typed module loading and launch helpers                                      |
@@ -154,6 +154,8 @@ cuda-oxide is split into focused crates. Here is every one and its role:
 | `oxide-artifacts`    | Architecture-neutral embedded device artifact metadata                                 |
 | `oxide-tile-export`  | Descriptions of SIMT functions exported to Tile IR libraries |
 | `oxide-tilebc`       | Tile IR bytecode writer for those export descriptions |
+| `oxide-tile-provider-sys` | Raw bindings to the Tile IR linkage provider C ABI, generated from the compiler's header at build time |
+| `oxide-tile-provider` | Runtime of a tile library that is a linkage provider: answers the assembler's callbacks from embedded descriptions and device code |
 | `dialect-iket`       | pliron dialect modelling in-kernel event tracing                                       |
 | `iket-lower`         | `dialect-iket` profiles + instrumentation lowering                                     |
 | `dialect-ptx`        | pliron dialect modelling structured PTX                                                |

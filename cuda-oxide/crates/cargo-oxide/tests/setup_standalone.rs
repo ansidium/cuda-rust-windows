@@ -36,7 +36,7 @@ impl Drop for TempProject {
 }
 
 #[test]
-fn standalone_setup_uses_resolved_backend_without_building_the_project() {
+fn standalone_setup_refuses_an_explicit_pin_without_building_the_project() {
     let project = TempProject::new();
     fs::write(
         project.path().join("Cargo.toml"),
@@ -54,14 +54,14 @@ fn standalone_setup_uses_resolved_backend_without_building_the_project() {
         .unwrap();
 
     assert!(
-        output.status.success(),
-        "standalone setup failed:\nstdout:\n{}\nstderr:\n{}",
+        !output.status.success(),
+        "standalone setup must refuse a pinned backend:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("Backend is ready"),
-        "setup did not report the resolved backend"
+        String::from_utf8_lossy(&output.stderr).contains("CUDA_OXIDE_BACKEND"),
+        "setup did not explain the explicit backend pin"
     );
     assert!(
         !project.path().join("target").exists(),

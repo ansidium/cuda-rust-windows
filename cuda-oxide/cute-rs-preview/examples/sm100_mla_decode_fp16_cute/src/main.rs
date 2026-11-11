@@ -12,7 +12,7 @@ mod comparison;
 mod kernel;
 
 use cuda_core::{CudaContext, DeviceBuffer, LaunchConfig1D, sys};
-use cute_rs::attention::sm100::create_tensor_map_tiled;
+use cute_rs::nvgpu::cpasync::sm100_host::create_tensor_map_tiled;
 use serde::Deserialize;
 use serde_json::json;
 use std::{
@@ -235,8 +235,8 @@ fn main() -> Result<()> {
         batch * pages,
     )?;
     let context = CudaContext::new(0)?;
-    if context.compute_capability()? != (10, 0) {
-        return Err("this example requires B200/SM100".into());
+    if !matches!(context.compute_capability()?, (10, 0) | (10, 3)) {
+        return Err("this example requires SM100 or SM103".into());
     }
     let stream = context.new_stream()?;
     let dq = DeviceBuffer::from_host(&stream, &q)?;

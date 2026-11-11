@@ -91,14 +91,14 @@ TCGEN05_EXAMPLES=(gemm_sol tcgen05 tcgen05_matmul)
 WGMMA_EXAMPLES=(wgmma)
 BLACKWELL_MMA_EXAMPLES=(mma_mxf8f6f4)
 LTOIR_EXAMPLES=(addressof_sharedarray constant_memory cpp_consumes_rust_device device_ffi_test legacy_atomic_fadd legacy_atomic_rmw_cas legacy_nvvm_pointer_shapes manual_launch_libdevice mathdx_ffi_test primitive_stress)
-LTOIR_MODERN_EXAMPLES=(small_type_ffi_test)
+LTOIR_MODERN_EXAMPLES=(small_type_ffi_test nvvm_entry_allocas)
 TILELIB_EXAMPLES=(tilelib_relu)
 AUTO_NVVM_EXAMPLES=(libdevice_math)
 IKET_EXAMPLES=(iket_trace)
 BLACKWELL_COMPILE_EXAMPLES=(generated_intrinsics_blackwell)
 SM100_COMPILE_EXAMPLES=(redux_f32)
-NVVM_VERIFY_EXAMPLES=(constant_memory cp_async_small device_global enum_constant_provenance ex2_approx_f16 generated_intrinsics generated_intrinsics_blackwell generated_ldmatrix kernel_reference_validity legacy_atomic_fadd legacy_atomic_rmw_cas libdevice_math legacy_nvvm_pointer_shapes packed_atomic_add primitive_stress scoped_atomic_load_store shuffle_64 tcgen05 tuple_constant_provenance wgmma_mma_bf16)
-ERROR_EXAMPLES=(error error_set_discriminant_uninhabited error_enum_bool_payload_addr error_enum_pointer_overlap error_enum_shared_pointer_layout error_heap_alloc error_host_arch_intrinsic error_host_target_feature error_kernel_shared_param error_missing_device_attr error_generated_intrinsic_abi error_generated_intrinsic_unknown_id error_generated_intrinsic_fn_pointer error_generated_intrinsic_callable error_union_shared_pointer_addr error_union_shared_pointer_layout)
+NVVM_VERIFY_EXAMPLES=(array_from_fn constant_memory cp_async_small device_global enum_constant_provenance ex2_approx_f16 generated_intrinsics generated_intrinsics_blackwell generated_ldmatrix kernel_reference_validity legacy_atomic_fadd legacy_atomic_rmw_cas libdevice_math legacy_nvvm_pointer_shapes packed_atomic_add primitive_stress promoted_ref_return scoped_atomic_load_store shuffle_64 tcgen05 tuple_constant_provenance wgmma_mma_bf16)
+ERROR_EXAMPLES=(error error_set_discriminant_uninhabited error_static_nested_shared error_shared_static_relocation error_shared_pointer_constant error_enum_bool_payload_addr error_enum_pointer_overlap error_enum_shared_pointer_layout error_heap_alloc error_host_arch_intrinsic error_host_target_feature error_kernel_shared_param error_missing_device_attr error_generated_intrinsic_abi error_generated_intrinsic_unknown_id error_generated_intrinsic_fn_pointer error_generated_intrinsic_callable error_union_shared_pointer_addr error_union_shared_pointer_layout)
 
 # Per-example rustc flags policy: an example that needs a special rustc flag
 # carries it in `package.metadata.cuda-oxide.extra-rustflags`. cargo-oxide
@@ -344,7 +344,7 @@ fi
 # ---- Preflight -----------------------------------------------------------
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
+repo_root="$(cd "${script_dir}/.." && (pwd -W 2>/dev/null || pwd))"
 cd "${repo_root}"
 
 if [[ ! -f "${repo_root}/../Cargo.toml" ]] || [[ ! -d "crates/rustc-codegen-cuda/examples" ]]; then
@@ -523,7 +523,11 @@ ptxas_verify() {
         PTXAS_NOTE="ptxas gate skipped: no .target line in ${ptx}"
         return 0
     fi
-    if stderr_out="$("${PTXAS_BIN}" -arch="${arch}" "${ptx}" -o /dev/null 2>&1)"; then
+    local ptxas_null="/dev/null"
+    case "${OSTYPE:-}" in
+        msys*|cygwin*|win32*) ptxas_null="NUL" ;;
+    esac
+    if stderr_out="$("${PTXAS_BIN}" -arch="${arch}" "${ptx}" -o "${ptxas_null}" 2>&1)"; then
         PTXAS_NOTE="ptxas ${arch} ok"
         return 0
     fi
@@ -704,6 +708,18 @@ verdict_error() {
                 return 1
             fi
             ;;
+        error_shared_static_relocation)
+            if ! grep -Fq 'points at shared-memory static' "${log}"; then
+                echo "FAIL (missing shared-memory static relocation diagnostic)"
+                return 1
+            fi
+            ;;
+        error_shared_pointer_constant)
+            if ! grep -Fq 'stores a pointer to shared memory' "${log}"; then
+                echo "FAIL (missing stored shared-memory pointer diagnostic)"
+                return 1
+            fi
+            ;;
         error_generated_intrinsic_abi)
             if ! grep -Fq 'cuda-intrinsics ABI mismatch' "${log}" \
                 || ! grep -Fq '__cuda_oxide_intrinsic_abi_v2::i0001' "${log}"; then
@@ -771,6 +787,12 @@ verdict_error() {
                 return 1
             fi
             ;;
+        error_static_nested_shared)
+            if ! grep -Fq 'cannot nest `Barrier`; declare `Barrier` or `SharedArray` as the top-level static type' "${log}"; then
+                echo "FAIL (missing nested shared-memory static diagnostic)"
+                return 1
+            fi
+            ;;
         # `error` stays on the generic check below: unlike the fixtures above it
         # pins no single message, carrying two kernels to show that a valid one
         # still compiles while `core::fmt` machinery is refused.
@@ -819,10 +841,18 @@ verdict_tcgen05() {
 
 verdict_wgmma() {
     local ex="$1" log="$2" ec="$3"
+    local ptx="crates/rustc-codegen-cuda/examples/${ex}/${ex//-/_}.ptx"
     if [[ ${ec} -gt 128 ]]; then echo "FAIL (crashed, signal $((ec - 128)))"; return 1; fi
+    if [[ ${ec} -ne 0 ]]; then echo "FAIL (wgmma, exit=${ec})"; return 1; fi
     if grep -qE 'WARNING: WGMMA requires|WGMMA is Hopper-only|PTX load failed \(expected on non-Hopper\)|PTX module loaded' "${log}"; then
         if grep -qE 'PTX written|PTX Verification|PTX file generated|inspect generated PTX|\.ptx' "${log}"; then
-            if ! ptxas_verify "crates/rustc-codegen-cuda/examples/${ex}/${ex//-/_}.ptx"; then
+            # ptxas_verify may skip missing files; that is not evidence that
+            # the PTX-only fallback actually produced a device artifact.
+            if [[ ! -s "${ptx}" ]]; then
+                echo "FAIL (wgmma, PTX missing or empty: ${ptx})"
+                return 1
+            fi
+            if ! ptxas_verify "${ptx}"; then
                 echo "FAIL (wgmma, ${PTXAS_NOTE})"
                 return 1
             fi
@@ -832,7 +862,6 @@ verdict_wgmma() {
         echo "FAIL (wgmma, PTX not generated)"
         return 1
     fi
-    if [[ ${ec} -ne 0 ]]; then echo "FAIL (wgmma, exit=${ec})"; return 1; fi
     if grep_failure_markers "${log}"; then
         echo "FAIL (wgmma, failure marker in output)"
         return 1
@@ -2171,12 +2200,35 @@ run_cargo() {
     if [[ ${COMPILE_ONLY} -eq 1 ]] && verify_nvvm_in_compile_only "${ex}"; then
         local nvvm_arch
         nvvm_arch="$(nvvm_verify_arch "${ex}")"
+        # `emit-ltoir` writes no PTX for a shape check to read, so an example
+        # that ships one first gets an ordinary build and its check; without
+        # this the check would run only in GPU smoketests. The build removes
+        # stale LTOIR, so it goes before `emit-ltoir`, whose artifacts the
+        # verdict reads
+        local nvvm_shape_check="crates/rustc-codegen-cuda/examples/${ex}/verify-code-shape.sh"
+        : >"${log}"
+        if [[ -f "${nvvm_shape_check}" ]]; then
+            if [[ ${VERBOSE} -eq 1 ]]; then
+                cargo oxide build "${ex}" "--arch=${nvvm_arch}" 2>&1 | tee -a "${log}"
+                CARGO_EC=${PIPESTATUS[0]}
+            else
+                cargo oxide build "${ex}" "--arch=${nvvm_arch}" >>"${log}" 2>&1
+                CARGO_EC=$?
+            fi
+            if [[ ${CARGO_EC} -eq 0 ]] && ! bash "${nvvm_shape_check}" >>"${log}" 2>&1; then
+                printf '%s failed its verify-code-shape.sh assertions\n' "${ex}" >>"${log}"
+                CARGO_EC=1
+            fi
+            if [[ ${CARGO_EC} -ne 0 ]]; then
+                return
+            fi
+        fi
         local -a args=("emit-ltoir" "${ex}" "--arch=${nvvm_arch}")
         if [[ ${VERBOSE} -eq 1 ]]; then
-            cargo oxide "${args[@]}" 2>&1 | tee "${log}"
+            cargo oxide "${args[@]}" 2>&1 | tee -a "${log}"
             CARGO_EC=${PIPESTATUS[0]}
         else
-            cargo oxide "${args[@]}" >"${log}" 2>&1
+            cargo oxide "${args[@]}" >>"${log}" 2>&1
             CARGO_EC=$?
         fi
         return
@@ -2189,6 +2241,11 @@ run_cargo() {
         && "${host_cc}" =~ ^[0-9]+\.[0-9]+$ \
         && $((10#${host_cc//./})) -lt 75 ]]; then
         # Build at the instruction floor; the host check skips before module loading.
+        args+=("--arch=sm_75")
+    fi
+    if [[ "${ex}" == "scalar_math_sm75" ]]; then
+        # always build at the sm_75 floor, so newer GPUs run JIT-compiled
+        # sm_75 PTX and the build keeps proving the Turing floor
         args+=("--arch=sm_75")
     fi
     if [[ "${ex}" == "debug" ]]; then
@@ -2269,8 +2326,26 @@ run_cargo() {
         done
     fi
     if [[ ${CARGO_EC} -eq 0 && -f "${shape_check}" ]]; then
-        if ! bash "${shape_check}" >>"${log}" 2>&1; then
+        # the build log lets a check assert on compiler warnings as well as
+        # on artifacts; scripts that only read artifacts ignore it
+        if ! CUDA_OXIDE_BUILD_LOG="${log}" bash "${shape_check}" >>"${log}" 2>&1; then
             printf '%s failed its verify-code-shape.sh assertions\n' "${ex}" >>"${log}"
+            CARGO_EC=1
+        fi
+    fi
+    # Loop-hint warnings are rustc diagnostics, so cargo counts every one of
+    # them. A warning printed around rustc leaves no summary to count it.
+    # unroll_smoke exists to produce them, so it may not come back empty.
+    if [[ ${CARGO_EC} -eq 0 ]]; then
+        local hint_warnings counted_warnings
+        hint_warnings=$(grep -cE '^warning: .* requested but the loop (was not unrolled|may still be unrolled)' "${log}" || true)
+        counted_warnings=$(grep -oE 'generated [0-9]+ warnings?' "${log}" | awk '{ sum += $2 } END { print sum + 0 }')
+        if [[ "${ex}" == "unroll_smoke" && ${hint_warnings} -eq 0 ]]; then
+            printf '%s produced no loop-hint warnings\n' "${ex}" >>"${log}"
+            CARGO_EC=1
+        elif [[ ${counted_warnings} -lt ${hint_warnings} ]]; then
+            printf '%s printed %d loop-hint warnings but cargo counted %d warnings\n' \
+                "${ex}" "${hint_warnings}" "${counted_warnings}" >>"${log}"
             CARGO_EC=1
         fi
     fi
@@ -2441,8 +2516,11 @@ fi
 # discovery rather than failing.
 if [[ -z "${CUDA_OXIDE_BACKEND:-}" ]]; then
     host_triple="$(rustc -vV 2>/dev/null | sed -n 's/^host: //p')"
-    for backend_name in librustc_codegen_cuda.so librustc_codegen_cuda.dylib; do
-        backend_so="${repo_root}/crates/rustc-codegen-cuda/target/${host_triple}/debug/${backend_name}"
+    for backend_rel in \
+        "debug/librustc_codegen_cuda.so" \
+        "debug/librustc_codegen_cuda.dylib" \
+        "release/rustc_codegen_cuda.dll"; do
+        backend_so="${repo_root}/crates/rustc-codegen-cuda/target/${host_triple}/${backend_rel}"
         if [[ -n "${host_triple}" && -f "${backend_so}" ]]; then
             export CUDA_OXIDE_BACKEND="${backend_so}"
             printf "Backend for this run: %s\n" "${CUDA_OXIDE_BACKEND}"

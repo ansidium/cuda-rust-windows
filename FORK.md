@@ -1,9 +1,9 @@
 # CUDA Rust Windows Fork
 
-This fork adds `x86_64-pc-windows-msvc` support to
+This fork ships tested `x86_64-pc-windows-msvc` builds of
 [NVIDIA/cuda-rust](https://github.com/NVIDIA/cuda-rust).
-The upstream baseline is `cced2a35bcc557b30f27209ff3887b4eb728cb63`
-(CUDA-Oxide 0.3.0, shared host crates 0.5.0).
+The upstream baseline is `a9f0324747e52d753a707061dfc9ed1669ef086f`
+(CUDA-Oxide 0.4.0, shared host crates 0.5.0).
 
 ## Maintenance
 
@@ -76,11 +76,12 @@ CUDA-Oxide version. Build the archive with
 
 ## Windows differences
 
-- MSVC CUDA enum conversions, COFF artifact embedding, and Windows DLL discovery.
+- MSVC CUDA enum conversions while upstream PR #1473 is pending.
+- Windows packaging, backend cache isolation, and pinned dependency scaffolds.
+  The COFF writer and toolkit discovery are now shared with upstream (#1770).
 - Release-profile backend builds on Windows.
 - Generated projects pin the runtime and compiler dependencies to one fork revision.
-- The host, SIMT, and Tile workspaces use Rust 1.99.1. Upstream's host and Tile
-  pins are 1.98.0 at this baseline.
+- The host, SIMT, and Tile workspaces use Rust 1.99.1.
 - Fork CI uses GitHub-hosted CPU runners. NVIDIA's GPU runner pool is limited
   to the canonical repository.
 

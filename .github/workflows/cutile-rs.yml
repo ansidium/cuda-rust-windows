@@ -20,6 +20,7 @@ on:
   push:
     branches:
       - main
+      - "release/v0.5.x"
       - "pull-request/[0-9]+"
   workflow_dispatch:
 
@@ -73,6 +74,23 @@ jobs:
             any_changed:
               - '*'
               - '**'
+
+  dependency-security:
+    needs: changes
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.tile == 'true' ||
+      needs.changes.outputs.any_changed != 'true'
+    runs-on: linux-amd64-cpu4
+    container:
+      image: rust:1.98.0-bookworm
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --version 0.19.0 --locked
+      - name: Check Tile dependencies including optional reference examples
+        run: cargo deny --workspace --all-features --locked check
 
   # Exercise the oldest Tile IR assembler, including its lack of
   # --list-versions. The separate 13.0 lane only checks shared host crates.
@@ -210,7 +228,9 @@ jobs:
       - name: Bundle runtime test archives
         run: |
           cp "$(command -v cargo-nextest)" "$RUNNER_TEMP/cutile-gpu-tests/cargo-nextest"
-          git rev-parse HEAD > "$RUNNER_TEMP/cutile-gpu-tests/revision.txt"
+          # Container steps may use a different HOME than checkout's Git setup.
+          git -c safe.directory="$GITHUB_WORKSPACE" -C "$GITHUB_WORKSPACE" \
+            rev-parse HEAD > "$RUNNER_TEMP/cutile-gpu-tests/revision.txt"
           cargo nextest --version > "$RUNNER_TEMP/cutile-gpu-tests/nextest-version.txt"
           tar -cf "$RUNNER_TEMP/cutile-gpu-tests.tar" \
             -C "$RUNNER_TEMP/cutile-gpu-tests" .
