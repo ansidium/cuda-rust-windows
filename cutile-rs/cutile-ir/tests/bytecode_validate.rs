@@ -125,7 +125,8 @@ fn run_tileiras(bc: &[u8], name: &str) {
             std::fs::remove_file(&tmp).ok();
             if !out.status.success() {
                 let stderr = String::from_utf8_lossy(&out.stderr);
-                panic!("tileiras rejected bytecode for module '{name}':\n{stderr}");
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                panic!("tileiras rejected bytecode for module '{name}':\nstdout: {stdout}\nstderr: {stderr}");
             }
         }
         Err(e)

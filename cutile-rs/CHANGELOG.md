@@ -20,6 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Add opt-in B200 profiles to the fused QKV and NVFP4 MoE examples. Add public
+  CTK 13.5 setup instructions, explicit large MoE fixture selection, focused
+  correctness runs and raw timing samples; retain the original default profiles.
+- Add optional cheap screening and budget-reserved paired confirmation to the
+  preparation pipeline. Preparation stops before fresh incumbent comparisons;
+  incomplete confirmation retains the incumbent and records raw samples and
+  failures. The RMSNorm autotune example uses this path. Confirmation defaults
+  are configurable repeatability heuristics, not statistical guarantees.
+- Ordinary launches can join CPU preparation of the same specialization and
+  load its binary on the launching thread. Retained prepared binaries are
+  reusable without explicit installation. Waiting callers have independent
+  cancellation, and interrupted or abandoned compilation remains retryable.
+- Add an opt-in autotuning preparation pipeline under `experimental-tune`,
+  separating CPU CUBIN compilation from foreground loading, correctness checks
+  and measurement. It defaults to one candidate ahead, supports bounded workers
+  and cooperative deadlines, and reports invalidity separately from timeouts
+  and infrastructure failures. Results require independent finalist confirmation;
+  the existing synchronous tuner and resume-log format are unchanged.
 - Refresh `cutile-kernels` from Grout with split-K prefill/merge, persistent
   RMSNorm, and the remaining baseline and single-token variants. NVFP4 MoE
   routing, quantization, FC1/FC2, and finalization kernels now live in the
@@ -29,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   KV-scatter kernel, with a correctness example and opt-in CUDA graph benchmark
   sweep. The initial schedule is not B200-tuned (#1746).
 
+### Changed
+
+- The static tile-library GPU tests always assemble their library from its
+  `.mlir` sources; the checked-in bytecode is removed. They take
+  `cuda-tile-translate` from `CUTILE_TILE_TRANSLATE`, or from next to
+  `tileiras`.
+
 ### Documentation
 
 - Link the Tile library provider catalog and CUDA Oxide export workflow;
@@ -37,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Keep masked QKV tail-row slot pointers in bounds, retaining the original
+  M=67 fixture and numerical checks under compiler-instrumented memcheck.
 - Update the optional `cuda-tile-rs` bindings and `cuda-tile-translate` build
   from CUDA Tile IR 13.2 to the public 13.5 release, including SIMT preview
   support and translator round-trip tests.
